@@ -1,0 +1,38 @@
+services:
+  - type: web
+    name: techhub-api
+    runtime: php
+    rootDir: backend
+    buildCommand: composer install --no-dev --optimize-autoloader && php artisan migrate --force && php artisan config:cache && php artisan route:cache && php artisan view:cache
+    startCommand: php artisan serve --host=0.0.0.0 --port:$PORT
+    envVars:
+      - key: APP_ENV
+        value: production
+      - key: APP_DEBUG
+        value: "false"
+      - key: DB_CONNECTION
+        value: mysql
+      - key: SESSION_DRIVER
+        value: database
+      - key: QUEUE_CONNECTION
+        value: database
+      - key: VTPASS_BASE_URL
+        value: https://vtpass.com/api
+
+  - type: cron
+    name: techhub-requery
+    runtime: php
+    rootDir: backend
+    buildCommand: composer install --no-dev --optimize-autoloader
+    schedule: "*/5 * * * *"
+    startCommand: php artisan bills:requery-pending
+
+  - type: static
+    name: techhub-app
+    rootDir: frontend
+    buildCommand: npm install && npm run build
+    staticPublishPath: dist
+    routes:
+      - type: rewrite
+        source: /**
+        destination: /index.html
