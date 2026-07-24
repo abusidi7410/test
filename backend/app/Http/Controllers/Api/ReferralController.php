@@ -20,12 +20,22 @@ class ReferralController extends Controller
         $completedReferrals = $user->referrals()->where('status', 'completed')->count();
         $totalEarnings = $user->referrals()->sum('reward_amount');
 
+        $referrals = $user->referrals->map(fn ($ref) => [
+            'id' => $ref->id,
+            'name' => $ref->referred ? $ref->referred->first_name . ' ' . $ref->referred->last_name : 'Unknown',
+            'email' => $ref->referred?->email ?? 'unknown',
+            'status' => $ref->status->value,
+            'earned' => (float) $ref->reward_amount,
+            'joined_at' => $ref->created_at->toISOString(),
+        ]);
+
         return $this->successResponse([
+            'referral_link' => url('/register?ref=' . $user->referral_code),
             'referral_code' => $user->referral_code,
+            'total_earned' => (float) $totalEarnings,
             'total_referrals' => $totalReferrals,
             'completed_referrals' => $completedReferrals,
-            'total_earnings' => number_format($totalEarnings, 2),
-            'referrals' => $user->referrals,
+            'referrals' => $referrals,
         ]);
     }
 

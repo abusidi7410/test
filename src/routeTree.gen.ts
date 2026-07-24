@@ -9,45 +9,57 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
-import { Route as RegisterRouteImport } from './routes/register'
-import { Route as LoginRouteImport } from './routes/login'
-import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
-import { Route as AppRouteImport } from './routes/_app'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as AppWithdrawRouteImport } from './routes/_app.withdraw'
-import { Route as AppWalletRouteImport } from './routes/_app.wallet'
-import { Route as AppTransferRouteImport } from './routes/_app.transfer'
-import { Route as AppTransactionsRouteImport } from './routes/_app.transactions'
-import { Route as AppSettingsRouteImport } from './routes/_app.settings'
-import { Route as AppReferralsRouteImport } from './routes/_app.referrals'
-import { Route as AppProfileRouteImport } from './routes/_app.profile'
-import { Route as AppNotificationsRouteImport } from './routes/_app.notifications'
-import { Route as AppInternetRouteImport } from './routes/_app.internet'
-import { Route as AppGiftCardsRouteImport } from './routes/_app.gift-cards'
-import { Route as AppFundWalletRouteImport } from './routes/_app.fund-wallet'
-import { Route as AppElectricityRouteImport } from './routes/_app.electricity'
-import { Route as AppEducationRouteImport } from './routes/_app.education'
-import { Route as AppDataRouteImport } from './routes/_app.data'
-import { Route as AppDashboardRouteImport } from './routes/_app.dashboard'
-import { Route as AppCableTvRouteImport } from './routes/_app.cable-tv'
-import { Route as AppBettingRouteImport } from './routes/_app.betting'
-import { Route as AppAirtimeToCashRouteImport } from './routes/_app.airtime-to-cash'
+import { Route as AppRouteImport } from './routes/_app'
+import { Route as AdminRouteImport } from './routes/admin'
+import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
+import { Route as LoginRouteImport } from './routes/login'
+import { Route as RegisterRouteImport } from './routes/register'
+import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as AppAirtimeRouteImport } from './routes/_app.airtime'
+import { Route as AppAirtimeToCashRouteImport } from './routes/_app.airtime-to-cash'
+import { Route as AppBettingRouteImport } from './routes/_app.betting'
+import { Route as AppCableTvRouteImport } from './routes/_app.cable-tv'
+import { Route as AppDashboardRouteImport } from './routes/_app.dashboard'
+import { Route as AppDataRouteImport } from './routes/_app.data'
+import { Route as AppEducationRouteImport } from './routes/_app.education'
+import { Route as AppElectricityRouteImport } from './routes/_app.electricity'
+import { Route as AppFundWalletRouteImport } from './routes/_app.fund-wallet'
+import { Route as AppGiftCardsRouteImport } from './routes/_app.gift-cards'
+import { Route as AppInternetRouteImport } from './routes/_app.internet'
+import { Route as AppNotificationsRouteImport } from './routes/_app.notifications'
+import { Route as AppProfileRouteImport } from './routes/_app.profile'
+import { Route as AppReferralsRouteImport } from './routes/_app.referrals'
+import { Route as AppSettingsRouteImport } from './routes/_app.settings'
+import { Route as AppTransactionsRouteImport } from './routes/_app.transactions'
+import { Route as AppTransferRouteImport } from './routes/_app.transfer'
+import { Route as AppWalletRouteImport } from './routes/_app.wallet'
+import { Route as AppWithdrawRouteImport } from './routes/_app.withdraw'
+import { Route as AdminAdminsRouteImport } from './routes/admin.admins'
+import { Route as AdminDashboardRouteImport } from './routes/admin.dashboard'
+import { Route as AdminProvidersRouteImport } from './routes/admin.providers'
+import { Route as AdminReportsRouteImport } from './routes/admin.reports'
+import { Route as AdminSettingsRouteImport } from './routes/admin.settings'
+import { Route as AdminTransactionsRouteImport } from './routes/admin.transactions'
+import { Route as AdminUsersRouteImport } from './routes/admin.users'
+import { Route as AuthCallbackRouteImport } from './routes/auth.callback'
+import { Route as AppPaymentSuccessRouteImport } from './routes/_app.payment.success'
+import { Route as AdminAdminsIdRouteImport } from './routes/admin.admins.$id'
+import { Route as AdminProvidersIdRouteImport } from './routes/admin.providers.$id'
+import { Route as AdminUsersIdRouteImport } from './routes/admin.users.$id'
 
-const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
-  id: '/sitemap.xml',
-  path: '/sitemap.xml',
+const IndexRoute = IndexRouteImport.update({
+  id: '/',
+  path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const RegisterRoute = RegisterRouteImport.update({
-  id: '/register',
-  path: '/register',
+const AppRoute = AppRouteImport.update({
+  id: '/_app',
   getParentRoute: () => rootRouteImport,
 } as any)
-const LoginRoute = LoginRouteImport.update({
-  id: '/login',
-  path: '/login',
+const AdminRoute = AdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ForgotPasswordRoute = ForgotPasswordRouteImport.update({
@@ -55,98 +67,24 @@ const ForgotPasswordRoute = ForgotPasswordRouteImport.update({
   path: '/forgot-password',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AppRoute = AppRouteImport.update({
-  id: '/_app',
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
+const RegisterRoute = RegisterRouteImport.update({
+  id: '/register',
+  path: '/register',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AppWithdrawRoute = AppWithdrawRouteImport.update({
-  id: '/withdraw',
-  path: '/withdraw',
-  getParentRoute: () => AppRoute,
+const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
+  id: '/sitemap.xml',
+  path: '/sitemap.xml',
+  getParentRoute: () => rootRouteImport,
 } as any)
-const AppWalletRoute = AppWalletRouteImport.update({
-  id: '/wallet',
-  path: '/wallet',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppTransferRoute = AppTransferRouteImport.update({
-  id: '/transfer',
-  path: '/transfer',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppTransactionsRoute = AppTransactionsRouteImport.update({
-  id: '/transactions',
-  path: '/transactions',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppSettingsRoute = AppSettingsRouteImport.update({
-  id: '/settings',
-  path: '/settings',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppReferralsRoute = AppReferralsRouteImport.update({
-  id: '/referrals',
-  path: '/referrals',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppProfileRoute = AppProfileRouteImport.update({
-  id: '/profile',
-  path: '/profile',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppNotificationsRoute = AppNotificationsRouteImport.update({
-  id: '/notifications',
-  path: '/notifications',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppInternetRoute = AppInternetRouteImport.update({
-  id: '/internet',
-  path: '/internet',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppGiftCardsRoute = AppGiftCardsRouteImport.update({
-  id: '/gift-cards',
-  path: '/gift-cards',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppFundWalletRoute = AppFundWalletRouteImport.update({
-  id: '/fund-wallet',
-  path: '/fund-wallet',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppElectricityRoute = AppElectricityRouteImport.update({
-  id: '/electricity',
-  path: '/electricity',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppEducationRoute = AppEducationRouteImport.update({
-  id: '/education',
-  path: '/education',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppDataRoute = AppDataRouteImport.update({
-  id: '/data',
-  path: '/data',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppDashboardRoute = AppDashboardRouteImport.update({
-  id: '/dashboard',
-  path: '/dashboard',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppCableTvRoute = AppCableTvRouteImport.update({
-  id: '/cable-tv',
-  path: '/cable-tv',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppBettingRoute = AppBettingRouteImport.update({
-  id: '/betting',
-  path: '/betting',
+const AppAirtimeRoute = AppAirtimeRouteImport.update({
+  id: '/airtime',
+  path: '/airtime',
   getParentRoute: () => AppRoute,
 } as any)
 const AppAirtimeToCashRoute = AppAirtimeToCashRouteImport.update({
@@ -154,14 +92,155 @@ const AppAirtimeToCashRoute = AppAirtimeToCashRouteImport.update({
   path: '/airtime-to-cash',
   getParentRoute: () => AppRoute,
 } as any)
-const AppAirtimeRoute = AppAirtimeRouteImport.update({
-  id: '/airtime',
-  path: '/airtime',
+const AppBettingRoute = AppBettingRouteImport.update({
+  id: '/betting',
+  path: '/betting',
   getParentRoute: () => AppRoute,
+} as any)
+const AppCableTvRoute = AppCableTvRouteImport.update({
+  id: '/cable-tv',
+  path: '/cable-tv',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppDashboardRoute = AppDashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppDataRoute = AppDataRouteImport.update({
+  id: '/data',
+  path: '/data',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppEducationRoute = AppEducationRouteImport.update({
+  id: '/education',
+  path: '/education',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppElectricityRoute = AppElectricityRouteImport.update({
+  id: '/electricity',
+  path: '/electricity',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppFundWalletRoute = AppFundWalletRouteImport.update({
+  id: '/fund-wallet',
+  path: '/fund-wallet',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppGiftCardsRoute = AppGiftCardsRouteImport.update({
+  id: '/gift-cards',
+  path: '/gift-cards',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppInternetRoute = AppInternetRouteImport.update({
+  id: '/internet',
+  path: '/internet',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppNotificationsRoute = AppNotificationsRouteImport.update({
+  id: '/notifications',
+  path: '/notifications',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppProfileRoute = AppProfileRouteImport.update({
+  id: '/profile',
+  path: '/profile',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppReferralsRoute = AppReferralsRouteImport.update({
+  id: '/referrals',
+  path: '/referrals',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppSettingsRoute = AppSettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppTransactionsRoute = AppTransactionsRouteImport.update({
+  id: '/transactions',
+  path: '/transactions',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppTransferRoute = AppTransferRouteImport.update({
+  id: '/transfer',
+  path: '/transfer',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppWalletRoute = AppWalletRouteImport.update({
+  id: '/wallet',
+  path: '/wallet',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppWithdrawRoute = AppWithdrawRouteImport.update({
+  id: '/withdraw',
+  path: '/withdraw',
+  getParentRoute: () => AppRoute,
+} as any)
+const AdminAdminsRoute = AdminAdminsRouteImport.update({
+  id: '/admins',
+  path: '/admins',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminDashboardRoute = AdminDashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminProvidersRoute = AdminProvidersRouteImport.update({
+  id: '/providers',
+  path: '/providers',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminReportsRoute = AdminReportsRouteImport.update({
+  id: '/reports',
+  path: '/reports',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminSettingsRoute = AdminSettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminTransactionsRoute = AdminTransactionsRouteImport.update({
+  id: '/transactions',
+  path: '/transactions',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminUsersRoute = AdminUsersRouteImport.update({
+  id: '/users',
+  path: '/users',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AuthCallbackRoute = AuthCallbackRouteImport.update({
+  id: '/auth/callback',
+  path: '/auth/callback',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AppPaymentSuccessRoute = AppPaymentSuccessRouteImport.update({
+  id: '/payment/success',
+  path: '/payment/success',
+  getParentRoute: () => AppRoute,
+} as any)
+const AdminAdminsIdRoute = AdminAdminsIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => AdminAdminsRoute,
+} as any)
+const AdminProvidersIdRoute = AdminProvidersIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => AdminProvidersRoute,
+} as any)
+const AdminUsersIdRoute = AdminUsersIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => AdminUsersRoute,
 } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/admin': typeof AdminRouteWithChildren
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
@@ -185,9 +264,22 @@ export interface FileRoutesByFullPath {
   '/transfer': typeof AppTransferRoute
   '/wallet': typeof AppWalletRoute
   '/withdraw': typeof AppWithdrawRoute
+  '/admin/admins': typeof AdminAdminsRouteWithChildren
+  '/admin/dashboard': typeof AdminDashboardRoute
+  '/admin/providers': typeof AdminProvidersRouteWithChildren
+  '/admin/reports': typeof AdminReportsRoute
+  '/admin/settings': typeof AdminSettingsRoute
+  '/admin/transactions': typeof AdminTransactionsRoute
+  '/admin/users': typeof AdminUsersRouteWithChildren
+  '/auth/callback': typeof AuthCallbackRoute
+  '/payment/success': typeof AppPaymentSuccessRoute
+  '/admin/admins/$id': typeof AdminAdminsIdRoute
+  '/admin/providers/$id': typeof AdminProvidersIdRoute
+  '/admin/users/$id': typeof AdminUsersIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/admin': typeof AdminRouteWithChildren
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
@@ -211,11 +303,24 @@ export interface FileRoutesByTo {
   '/transfer': typeof AppTransferRoute
   '/wallet': typeof AppWalletRoute
   '/withdraw': typeof AppWithdrawRoute
+  '/admin/admins': typeof AdminAdminsRouteWithChildren
+  '/admin/dashboard': typeof AdminDashboardRoute
+  '/admin/providers': typeof AdminProvidersRouteWithChildren
+  '/admin/reports': typeof AdminReportsRoute
+  '/admin/settings': typeof AdminSettingsRoute
+  '/admin/transactions': typeof AdminTransactionsRoute
+  '/admin/users': typeof AdminUsersRouteWithChildren
+  '/auth/callback': typeof AuthCallbackRoute
+  '/payment/success': typeof AppPaymentSuccessRoute
+  '/admin/admins/$id': typeof AdminAdminsIdRoute
+  '/admin/providers/$id': typeof AdminProvidersIdRoute
+  '/admin/users/$id': typeof AdminUsersIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/_app': typeof AppRouteWithChildren
+  '/admin': typeof AdminRouteWithChildren
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
@@ -239,11 +344,24 @@ export interface FileRoutesById {
   '/_app/transfer': typeof AppTransferRoute
   '/_app/wallet': typeof AppWalletRoute
   '/_app/withdraw': typeof AppWithdrawRoute
+  '/admin/admins': typeof AdminAdminsRouteWithChildren
+  '/admin/dashboard': typeof AdminDashboardRoute
+  '/admin/providers': typeof AdminProvidersRouteWithChildren
+  '/admin/reports': typeof AdminReportsRoute
+  '/admin/settings': typeof AdminSettingsRoute
+  '/admin/transactions': typeof AdminTransactionsRoute
+  '/admin/users': typeof AdminUsersRouteWithChildren
+  '/auth/callback': typeof AuthCallbackRoute
+  '/_app/payment/success': typeof AppPaymentSuccessRoute
+  '/admin/admins/$id': typeof AdminAdminsIdRoute
+  '/admin/providers/$id': typeof AdminProvidersIdRoute
+  '/admin/users/$id': typeof AdminUsersIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/admin'
     | '/forgot-password'
     | '/login'
     | '/register'
@@ -267,9 +385,22 @@ export interface FileRouteTypes {
     | '/transfer'
     | '/wallet'
     | '/withdraw'
+    | '/admin/admins'
+    | '/admin/dashboard'
+    | '/admin/providers'
+    | '/admin/reports'
+    | '/admin/settings'
+    | '/admin/transactions'
+    | '/admin/users'
+    | '/auth/callback'
+    | '/payment/success'
+    | '/admin/admins/$id'
+    | '/admin/providers/$id'
+    | '/admin/users/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/admin'
     | '/forgot-password'
     | '/login'
     | '/register'
@@ -293,10 +424,23 @@ export interface FileRouteTypes {
     | '/transfer'
     | '/wallet'
     | '/withdraw'
+    | '/admin/admins'
+    | '/admin/dashboard'
+    | '/admin/providers'
+    | '/admin/reports'
+    | '/admin/settings'
+    | '/admin/transactions'
+    | '/admin/users'
+    | '/auth/callback'
+    | '/payment/success'
+    | '/admin/admins/$id'
+    | '/admin/providers/$id'
+    | '/admin/users/$id'
   id:
     | '__root__'
     | '/'
     | '/_app'
+    | '/admin'
     | '/forgot-password'
     | '/login'
     | '/register'
@@ -320,45 +464,38 @@ export interface FileRouteTypes {
     | '/_app/transfer'
     | '/_app/wallet'
     | '/_app/withdraw'
+    | '/admin/admins'
+    | '/admin/dashboard'
+    | '/admin/providers'
+    | '/admin/reports'
+    | '/admin/settings'
+    | '/admin/transactions'
+    | '/admin/users'
+    | '/auth/callback'
+    | '/_app/payment/success'
+    | '/admin/admins/$id'
+    | '/admin/providers/$id'
+    | '/admin/users/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AppRoute: typeof AppRouteWithChildren
+  AdminRoute: typeof AdminRouteWithChildren
   ForgotPasswordRoute: typeof ForgotPasswordRoute
   LoginRoute: typeof LoginRoute
   RegisterRoute: typeof RegisterRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
+  AuthCallbackRoute: typeof AuthCallbackRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/sitemap.xml': {
-      id: '/sitemap.xml'
-      path: '/sitemap.xml'
-      fullPath: '/sitemap.xml'
-      preLoaderRoute: typeof SitemapDotxmlRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/register': {
-      id: '/register'
-      path: '/register'
-      fullPath: '/register'
-      preLoaderRoute: typeof RegisterRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/login': {
-      id: '/login'
-      path: '/login'
-      fullPath: '/login'
-      preLoaderRoute: typeof LoginRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/forgot-password': {
-      id: '/forgot-password'
-      path: '/forgot-password'
-      fullPath: '/forgot-password'
-      preLoaderRoute: typeof ForgotPasswordRouteImport
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_app': {
@@ -368,130 +505,46 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
+    '/admin': {
+      id: '/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AdminRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/_app/withdraw': {
-      id: '/_app/withdraw'
-      path: '/withdraw'
-      fullPath: '/withdraw'
-      preLoaderRoute: typeof AppWithdrawRouteImport
-      parentRoute: typeof AppRoute
+    '/forgot-password': {
+      id: '/forgot-password'
+      path: '/forgot-password'
+      fullPath: '/forgot-password'
+      preLoaderRoute: typeof ForgotPasswordRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/_app/wallet': {
-      id: '/_app/wallet'
-      path: '/wallet'
-      fullPath: '/wallet'
-      preLoaderRoute: typeof AppWalletRouteImport
-      parentRoute: typeof AppRoute
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/_app/transfer': {
-      id: '/_app/transfer'
-      path: '/transfer'
-      fullPath: '/transfer'
-      preLoaderRoute: typeof AppTransferRouteImport
-      parentRoute: typeof AppRoute
+    '/register': {
+      id: '/register'
+      path: '/register'
+      fullPath: '/register'
+      preLoaderRoute: typeof RegisterRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/_app/transactions': {
-      id: '/_app/transactions'
-      path: '/transactions'
-      fullPath: '/transactions'
-      preLoaderRoute: typeof AppTransactionsRouteImport
-      parentRoute: typeof AppRoute
+    '/sitemap.xml': {
+      id: '/sitemap.xml'
+      path: '/sitemap.xml'
+      fullPath: '/sitemap.xml'
+      preLoaderRoute: typeof SitemapDotxmlRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/_app/settings': {
-      id: '/_app/settings'
-      path: '/settings'
-      fullPath: '/settings'
-      preLoaderRoute: typeof AppSettingsRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/_app/referrals': {
-      id: '/_app/referrals'
-      path: '/referrals'
-      fullPath: '/referrals'
-      preLoaderRoute: typeof AppReferralsRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/_app/profile': {
-      id: '/_app/profile'
-      path: '/profile'
-      fullPath: '/profile'
-      preLoaderRoute: typeof AppProfileRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/_app/notifications': {
-      id: '/_app/notifications'
-      path: '/notifications'
-      fullPath: '/notifications'
-      preLoaderRoute: typeof AppNotificationsRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/_app/internet': {
-      id: '/_app/internet'
-      path: '/internet'
-      fullPath: '/internet'
-      preLoaderRoute: typeof AppInternetRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/_app/gift-cards': {
-      id: '/_app/gift-cards'
-      path: '/gift-cards'
-      fullPath: '/gift-cards'
-      preLoaderRoute: typeof AppGiftCardsRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/_app/fund-wallet': {
-      id: '/_app/fund-wallet'
-      path: '/fund-wallet'
-      fullPath: '/fund-wallet'
-      preLoaderRoute: typeof AppFundWalletRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/_app/electricity': {
-      id: '/_app/electricity'
-      path: '/electricity'
-      fullPath: '/electricity'
-      preLoaderRoute: typeof AppElectricityRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/_app/education': {
-      id: '/_app/education'
-      path: '/education'
-      fullPath: '/education'
-      preLoaderRoute: typeof AppEducationRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/_app/data': {
-      id: '/_app/data'
-      path: '/data'
-      fullPath: '/data'
-      preLoaderRoute: typeof AppDataRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/_app/dashboard': {
-      id: '/_app/dashboard'
-      path: '/dashboard'
-      fullPath: '/dashboard'
-      preLoaderRoute: typeof AppDashboardRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/_app/cable-tv': {
-      id: '/_app/cable-tv'
-      path: '/cable-tv'
-      fullPath: '/cable-tv'
-      preLoaderRoute: typeof AppCableTvRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/_app/betting': {
-      id: '/_app/betting'
-      path: '/betting'
-      fullPath: '/betting'
-      preLoaderRoute: typeof AppBettingRouteImport
+    '/_app/airtime': {
+      id: '/_app/airtime'
+      path: '/airtime'
+      fullPath: '/airtime'
+      preLoaderRoute: typeof AppAirtimeRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/airtime-to-cash': {
@@ -501,12 +554,208 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppAirtimeToCashRouteImport
       parentRoute: typeof AppRoute
     }
-    '/_app/airtime': {
-      id: '/_app/airtime'
-      path: '/airtime'
-      fullPath: '/airtime'
-      preLoaderRoute: typeof AppAirtimeRouteImport
+    '/_app/betting': {
+      id: '/_app/betting'
+      path: '/betting'
+      fullPath: '/betting'
+      preLoaderRoute: typeof AppBettingRouteImport
       parentRoute: typeof AppRoute
+    }
+    '/_app/cable-tv': {
+      id: '/_app/cable-tv'
+      path: '/cable-tv'
+      fullPath: '/cable-tv'
+      preLoaderRoute: typeof AppCableTvRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/dashboard': {
+      id: '/_app/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof AppDashboardRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/data': {
+      id: '/_app/data'
+      path: '/data'
+      fullPath: '/data'
+      preLoaderRoute: typeof AppDataRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/education': {
+      id: '/_app/education'
+      path: '/education'
+      fullPath: '/education'
+      preLoaderRoute: typeof AppEducationRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/electricity': {
+      id: '/_app/electricity'
+      path: '/electricity'
+      fullPath: '/electricity'
+      preLoaderRoute: typeof AppElectricityRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/fund-wallet': {
+      id: '/_app/fund-wallet'
+      path: '/fund-wallet'
+      fullPath: '/fund-wallet'
+      preLoaderRoute: typeof AppFundWalletRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/gift-cards': {
+      id: '/_app/gift-cards'
+      path: '/gift-cards'
+      fullPath: '/gift-cards'
+      preLoaderRoute: typeof AppGiftCardsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/internet': {
+      id: '/_app/internet'
+      path: '/internet'
+      fullPath: '/internet'
+      preLoaderRoute: typeof AppInternetRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/notifications': {
+      id: '/_app/notifications'
+      path: '/notifications'
+      fullPath: '/notifications'
+      preLoaderRoute: typeof AppNotificationsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/profile': {
+      id: '/_app/profile'
+      path: '/profile'
+      fullPath: '/profile'
+      preLoaderRoute: typeof AppProfileRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/referrals': {
+      id: '/_app/referrals'
+      path: '/referrals'
+      fullPath: '/referrals'
+      preLoaderRoute: typeof AppReferralsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/settings': {
+      id: '/_app/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof AppSettingsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/transactions': {
+      id: '/_app/transactions'
+      path: '/transactions'
+      fullPath: '/transactions'
+      preLoaderRoute: typeof AppTransactionsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/transfer': {
+      id: '/_app/transfer'
+      path: '/transfer'
+      fullPath: '/transfer'
+      preLoaderRoute: typeof AppTransferRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/wallet': {
+      id: '/_app/wallet'
+      path: '/wallet'
+      fullPath: '/wallet'
+      preLoaderRoute: typeof AppWalletRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/withdraw': {
+      id: '/_app/withdraw'
+      path: '/withdraw'
+      fullPath: '/withdraw'
+      preLoaderRoute: typeof AppWithdrawRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/admin/admins': {
+      id: '/admin/admins'
+      path: '/admins'
+      fullPath: '/admin/admins'
+      preLoaderRoute: typeof AdminAdminsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/dashboard': {
+      id: '/admin/dashboard'
+      path: '/dashboard'
+      fullPath: '/admin/dashboard'
+      preLoaderRoute: typeof AdminDashboardRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/providers': {
+      id: '/admin/providers'
+      path: '/providers'
+      fullPath: '/admin/providers'
+      preLoaderRoute: typeof AdminProvidersRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/reports': {
+      id: '/admin/reports'
+      path: '/reports'
+      fullPath: '/admin/reports'
+      preLoaderRoute: typeof AdminReportsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/settings': {
+      id: '/admin/settings'
+      path: '/settings'
+      fullPath: '/admin/settings'
+      preLoaderRoute: typeof AdminSettingsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/transactions': {
+      id: '/admin/transactions'
+      path: '/transactions'
+      fullPath: '/admin/transactions'
+      preLoaderRoute: typeof AdminTransactionsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/users': {
+      id: '/admin/users'
+      path: '/users'
+      fullPath: '/admin/users'
+      preLoaderRoute: typeof AdminUsersRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/auth/callback': {
+      id: '/auth/callback'
+      path: '/auth/callback'
+      fullPath: '/auth/callback'
+      preLoaderRoute: typeof AuthCallbackRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_app/payment/success': {
+      id: '/_app/payment/success'
+      path: '/payment/success'
+      fullPath: '/payment/success'
+      preLoaderRoute: typeof AppPaymentSuccessRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/admin/admins/$id': {
+      id: '/admin/admins/$id'
+      path: '/$id'
+      fullPath: '/admin/admins/$id'
+      preLoaderRoute: typeof AdminAdminsIdRouteImport
+      parentRoute: typeof AdminAdminsRoute
+    }
+    '/admin/providers/$id': {
+      id: '/admin/providers/$id'
+      path: '/$id'
+      fullPath: '/admin/providers/$id'
+      preLoaderRoute: typeof AdminProvidersIdRouteImport
+      parentRoute: typeof AdminProvidersRoute
+    }
+    '/admin/users/$id': {
+      id: '/admin/users/$id'
+      path: '/$id'
+      fullPath: '/admin/users/$id'
+      preLoaderRoute: typeof AdminUsersIdRouteImport
+      parentRoute: typeof AdminUsersRoute
     }
   }
 }
@@ -531,6 +780,7 @@ interface AppRouteChildren {
   AppTransferRoute: typeof AppTransferRoute
   AppWalletRoute: typeof AppWalletRoute
   AppWithdrawRoute: typeof AppWithdrawRoute
+  AppPaymentSuccessRoute: typeof AppPaymentSuccessRoute
 }
 
 const AppRouteChildren: AppRouteChildren = {
@@ -553,18 +803,89 @@ const AppRouteChildren: AppRouteChildren = {
   AppTransferRoute: AppTransferRoute,
   AppWalletRoute: AppWalletRoute,
   AppWithdrawRoute: AppWithdrawRoute,
+  AppPaymentSuccessRoute: AppPaymentSuccessRoute,
 }
 
 const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
 
+interface AdminAdminsRouteChildren {
+  AdminAdminsIdRoute: typeof AdminAdminsIdRoute
+}
+
+const AdminAdminsRouteChildren: AdminAdminsRouteChildren = {
+  AdminAdminsIdRoute: AdminAdminsIdRoute,
+}
+
+const AdminAdminsRouteWithChildren = AdminAdminsRoute._addFileChildren(
+  AdminAdminsRouteChildren,
+)
+
+interface AdminProvidersRouteChildren {
+  AdminProvidersIdRoute: typeof AdminProvidersIdRoute
+}
+
+const AdminProvidersRouteChildren: AdminProvidersRouteChildren = {
+  AdminProvidersIdRoute: AdminProvidersIdRoute,
+}
+
+const AdminProvidersRouteWithChildren = AdminProvidersRoute._addFileChildren(
+  AdminProvidersRouteChildren,
+)
+
+interface AdminUsersRouteChildren {
+  AdminUsersIdRoute: typeof AdminUsersIdRoute
+}
+
+const AdminUsersRouteChildren: AdminUsersRouteChildren = {
+  AdminUsersIdRoute: AdminUsersIdRoute,
+}
+
+const AdminUsersRouteWithChildren = AdminUsersRoute._addFileChildren(
+  AdminUsersRouteChildren,
+)
+
+interface AdminRouteChildren {
+  AdminAdminsRoute: typeof AdminAdminsRouteWithChildren
+  AdminDashboardRoute: typeof AdminDashboardRoute
+  AdminProvidersRoute: typeof AdminProvidersRouteWithChildren
+  AdminReportsRoute: typeof AdminReportsRoute
+  AdminSettingsRoute: typeof AdminSettingsRoute
+  AdminTransactionsRoute: typeof AdminTransactionsRoute
+  AdminUsersRoute: typeof AdminUsersRouteWithChildren
+}
+
+const AdminRouteChildren: AdminRouteChildren = {
+  AdminAdminsRoute: AdminAdminsRouteWithChildren,
+  AdminDashboardRoute: AdminDashboardRoute,
+  AdminProvidersRoute: AdminProvidersRouteWithChildren,
+  AdminReportsRoute: AdminReportsRoute,
+  AdminSettingsRoute: AdminSettingsRoute,
+  AdminTransactionsRoute: AdminTransactionsRoute,
+  AdminUsersRoute: AdminUsersRouteWithChildren,
+}
+
+const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AppRoute: AppRouteWithChildren,
+  AdminRoute: AdminRouteWithChildren,
   ForgotPasswordRoute: ForgotPasswordRoute,
   LoginRoute: LoginRoute,
   RegisterRoute: RegisterRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
+  AuthCallbackRoute: AuthCallbackRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}

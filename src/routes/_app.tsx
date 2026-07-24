@@ -1,13 +1,20 @@
-import { createFileRoute, Outlet } from "@tanstack/react-router";
+import { createFileRoute, Outlet, redirect } from "@tanstack/react-router";
 import { Loader2 } from "lucide-react";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/layout/AppSidebar";
 import { TopNav } from "@/components/layout/TopNav";
 import { MobileBottomNav } from "@/components/layout/MobileBottomNav";
-import { Toaster } from "@/components/ui/sonner";
 import { useAuth } from "@/lib/auth";
+import { TOKEN_KEY } from "@/lib/constants";
 
 export const Route = createFileRoute("/_app")({
+  beforeLoad: () => {
+    if (typeof window === "undefined") return;
+    const token = localStorage.getItem(TOKEN_KEY);
+    if (!token) {
+      throw redirect({ to: "/login" });
+    }
+  },
   component: AppLayout,
 });
 
@@ -31,7 +38,6 @@ function AppLayout() {
           <Outlet />
         </main>
         <MobileBottomNav />
-        <Toaster />
       </SidebarInset>
     </SidebarProvider>
   );

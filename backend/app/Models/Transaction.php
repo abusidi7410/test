@@ -25,13 +25,21 @@ class Transaction extends Model
         'type',
         'amount',
         'charge',
+        'fees',
         'previous_balance',
         'current_balance',
         'status',
         'description',
         'reference',
         'provider_reference',
+        'gateway',
+        'customer_email',
+        'customer_id',
+        'payment_channel',
+        'currency',
+        'paid_at',
         'metadata',
+        'webhook_payload',
     ];
 
     protected function casts(): array
@@ -42,9 +50,12 @@ class Transaction extends Model
             'status' => TransactionStatus::class,
             'amount' => 'decimal:2',
             'charge' => 'decimal:2',
+            'fees' => 'decimal:2',
             'previous_balance' => 'decimal:2',
             'current_balance' => 'decimal:2',
             'metadata' => 'array',
+            'webhook_payload' => 'array',
+            'paid_at' => 'datetime',
             'created_at' => 'datetime',
         ];
     }

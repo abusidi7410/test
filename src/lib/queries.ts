@@ -23,6 +23,8 @@ export function useWallet() {
   return useQuery({
     queryKey: ["wallet"],
     queryFn: () => walletApi.show(),
+    refetchOnMount: "always",
+    refetchOnWindowFocus: true,
   });
 }
 
@@ -36,6 +38,8 @@ export function useTransactions(params?: {
   return useQuery({
     queryKey: ["transactions", params],
     queryFn: () => transactionApi.list(params),
+    refetchOnMount: "always",
+    refetchOnWindowFocus: true,
   });
 }
 
@@ -43,6 +47,8 @@ export function useSpendingSummary() {
   return useQuery({
     queryKey: ["spendingSummary"],
     queryFn: () => transactionApi.spendingSummary(),
+    refetchOnMount: "always",
+    refetchOnWindowFocus: true,
   });
 }
 
@@ -50,6 +56,8 @@ export function useNotifications() {
   return useQuery({
     queryKey: ["notifications"],
     queryFn: () => notificationApi.list(),
+    refetchOnMount: "always",
+    refetchOnWindowFocus: true,
   });
 }
 
@@ -57,6 +65,8 @@ export function useUnreadNotificationCount() {
   return useQuery({
     queryKey: ["notifications", "unreadCount"],
     queryFn: () => notificationApi.unreadCount(),
+    refetchOnMount: "always",
+    refetchOnWindowFocus: true,
   });
 }
 

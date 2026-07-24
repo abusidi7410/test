@@ -9,7 +9,7 @@ use App\Models\BillPayment;
 use App\Models\Notification;
 use App\Models\Transaction;
 use App\Models\User;
-use App\Services\Vtpass;
+use App\Services\Providers\ProviderRegistry;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -24,7 +24,7 @@ class BillPaymentController extends Controller
         string $serviceType,
         array $validationRules,
         string $description,
-        callable $buildPayload,
+        callable $buildAdapterOperation,
         ?float $charge = null,
     ): JsonResponse {
         $validated = $request->validate($validationRules);
@@ -51,7 +51,6 @@ class BillPaymentController extends Controller
                 $charge,
                 $description,
                 $totalDebit,
-                $buildPayload,
             ) {
                 $previousBalance = $user->wallet->available_balance;
                 $currentBalance = $previousBalance - $totalDebit;
@@ -91,55 +90,18 @@ class BillPaymentController extends Controller
             });
 
             /** @var Transaction $transaction */
-            $vtpassPayload = $buildPayload($validated);
+            $adapterOperation = $buildAdapterOperation($validated);
 
-            /** @var Vtpass $vtpass */
-            $vtpass = app(Vtpass::class);
-            $response = $vtpass->payWithSubscription(
-                $vtpassPayload['serviceID'],
-                $vtpassPayload['billersCode'],
-                $vtpassPayload['variation_code'],
-                $vtpassPayload['subscription_type'] ?? 'renew',
-            );
+            $registry = app(ProviderRegistry::class);
+            $result = $registry->executeWithFailover($category, $adapterOperation);
 
             /** @var BillPayment $billPayment */
             $billPayment = $transaction->billPayment;
 
-            if ($vtpass->isResponseSuccessful($response)) {
-                $transaction->update([
-                    'status' => 'successful',
-                    'provider_reference' => $response['transactionId'] ?? null,
-                ]);
-
+            if ($result['success'] && isset($result['pending'])) {
                 $billPayment->update([
-                    'vtpass_request_id' => $vtpassPayload['request_id'],
-                    'vtpass_response' => $response,
-                ]);
-
-                Notification::create([
-                    'user_id' => $user->id,
-                    'type' => 'transaction',
-                    'title' => $description . ' Successful',
-                    'description' => $description . ' completed successfully.',
-                    'data' => [
-                        'transaction_id' => $transaction->id,
-                        'reference' => $transaction->reference,
-                        'amount' => $amount,
-                    ],
-                ]);
-
-                return $this->successResponse([
-                    'transaction' => $transaction->fresh(['billPayment']),
-                    'amount' => number_format($amount, 2),
-                    'charge' => number_format($charge ?? 0, 2),
-                    'total_debited' => number_format($totalDebit, 2),
-                    'reference' => $transaction->reference,
-                    'vtpass_response' => $response,
-                ], $description . ' successful.', 201);
-            } elseif ($vtpass->isResponsePending($response)) {
-                $billPayment->update([
-                    'vtpass_request_id' => $vtpassPayload['request_id'],
-                    'vtpass_response' => $response,
+                    'vtpass_request_id' => $result['response']['request_id'] ?? null,
+                    'vtpass_response' => $result['response'],
                 ]);
 
                 Notification::create([
@@ -160,18 +122,48 @@ class BillPaymentController extends Controller
                     'charge' => number_format($charge ?? 0, 2),
                     'total_debited' => number_format($totalDebit, 2),
                     'reference' => $transaction->reference,
-                    'vtpass_response' => $response,
+                    'provider' => $result['provider']?->name,
+                    'vtpass_response' => $result['response'],
                 ], $description . ' is being processed.', 202);
+            } elseif ($result['success']) {
+                $transaction->update([
+                    'status' => 'successful',
+                    'provider_reference' => $result['response']['transactionId'] ?? null,
+                ]);
+
+                $billPayment->update([
+                    'vtpass_request_id' => $result['response']['request_id'] ?? null,
+                    'vtpass_response' => $result['response'],
+                ]);
+
+                Notification::create([
+                    'user_id' => $user->id,
+                    'type' => 'transaction',
+                    'title' => $description . ' Successful',
+                    'description' => $description . ' completed successfully via ' . ($result['provider']?->name ?? 'provider') . '.',
+                    'data' => [
+                        'transaction_id' => $transaction->id,
+                        'reference' => $transaction->reference,
+                        'amount' => $amount,
+                    ],
+                ]);
+
+                return $this->successResponse([
+                    'transaction' => $transaction->fresh(['billPayment']),
+                    'amount' => number_format($amount, 2),
+                    'charge' => number_format($charge ?? 0, 2),
+                    'total_debited' => number_format($totalDebit, 2),
+                    'reference' => $transaction->reference,
+                    'provider' => $result['provider']?->name,
+                    'vtpass_response' => $result['response'],
+                ], $description . ' successful.', 201);
             } else {
-                DB::transaction(function () use ($transaction, $user, $totalDebit, $response, $vtpassPayload) {
+                $errorMsg = $result['message'] ?? 'Unknown error';
+
+                DB::transaction(function () use ($transaction, $user, $totalDebit, $errorMsg) {
                     $transaction->update([
                         'status' => 'failed',
-                        'description' => $transaction->description . ' - ' . $vtpass->getResponseMessage($response),
-                    ]);
-
-                    $transaction->billPayment->update([
-                        'vtpass_request_id' => $vtpassPayload['request_id'],
-                        'vtpass_response' => $response,
+                        'description' => $transaction->description . ' - ' . $errorMsg,
                     ]);
 
                     $user->wallet->increment('available_balance', $totalDebit);
@@ -181,7 +173,7 @@ class BillPaymentController extends Controller
                     'user_id' => $user->id,
                     'type' => 'transaction',
                     'title' => $description . ' Failed',
-                    'description' => $description . ' failed: ' . $vtpass->getResponseMessage($response),
+                    'description' => $description . ' failed: ' . $errorMsg,
                     'data' => [
                         'transaction_id' => $transaction->id,
                         'reference' => $transaction->reference,
@@ -189,7 +181,7 @@ class BillPaymentController extends Controller
                 ]);
 
                 return $this->errorResponse(
-                    $description . ' failed: ' . $vtpass->getResponseMessage($response),
+                    $description . ' failed: ' . $errorMsg,
                     422,
                 );
             }
@@ -213,68 +205,6 @@ class BillPaymentController extends Controller
         }
     }
 
-    private function processCreditBillPayment(
-        Request $request,
-        string $category,
-        string $serviceType,
-        array $validationRules,
-        string $description,
-    ): JsonResponse {
-        $validated = $request->validate($validationRules);
-
-        /** @var User $user */
-        $user = $request->user();
-
-        $amount = (float) ($validated['amount'] ?? 0);
-
-        $transaction = DB::transaction(function () use (
-            $user,
-            $category,
-            $serviceType,
-            $validated,
-            $amount,
-            $description,
-        ) {
-            $previousBalance = $user->wallet->available_balance;
-            $currentBalance = $previousBalance + $amount;
-            $reference = 'TH-' . Str::random(12);
-
-            $transaction = Transaction::create([
-                'user_id' => $user->id,
-                'wallet_id' => $user->wallet->id,
-                'category' => $category,
-                'type' => 'credit',
-                'amount' => $amount,
-                'charge' => 0.00,
-                'previous_balance' => $previousBalance,
-                'current_balance' => $currentBalance,
-                'status' => 'pending',
-                'description' => $description,
-                'reference' => $reference,
-                'metadata' => $validated,
-            ]);
-
-            $transaction->billPayment()->create([
-                'transaction_id' => $transaction->id,
-                'service_type' => $serviceType,
-                'provider' => $validated['provider'] ?? null,
-                'customer_id' => $validated['phone'] ?? null,
-                'package' => null,
-                'quantity' => 1,
-            ]);
-
-            $user->wallet->increment('available_balance', $amount);
-
-            return $transaction;
-        });
-
-        return $this->successResponse([
-            'transaction' => $transaction->fresh(['billPayment']),
-            'amount' => number_format($amount, 2),
-            'reference' => $transaction->reference,
-        ], $description . ' successful.', 201);
-    }
-
     public function buyAirtime(Request $request): JsonResponse
     {
         return $this->processBillPayment(
@@ -287,24 +217,22 @@ class BillPaymentController extends Controller
                 'provider' => ['required', 'string', 'in:mtn,airtel,glo,9mobile'],
             ],
             'Airtime purchase',
-            function (array $validated): array {
-                $serviceMap = [
-                    'mtn' => 'mtn',
-                    'airtel' => 'airtel',
-                    'glo' => 'glo',
-                    '9mobile' => '9mobile',
-                ];
+            function (array $validated): callable {
+                return function ($adapter) use ($validated) {
+                    $serviceMap = [
+                        'mtn' => 'mtn',
+                        'airtel' => 'airtel',
+                        'glo' => 'glo',
+                        '9mobile' => '9mobile',
+                    ];
 
-                /** @var Vtpass $vtpass */
-                $vtpass = app(Vtpass::class);
-
-                return [
-                    'serviceID' => $serviceMap[$validated['provider']] ?? $validated['provider'],
-                    'billersCode' => $validated['phone'],
-                    'variation_code' => $validated['provider'],
-                    'amount' => $validated['amount'],
-                    'request_id' => $vtpass->generateRequestId(),
-                ];
+                    return $adapter->payWithSubscription(
+                        $serviceMap[$validated['provider']] ?? $validated['provider'],
+                        $validated['phone'],
+                        $validated['provider'],
+                        'renew',
+                    );
+                };
             },
         );
     }
@@ -322,24 +250,22 @@ class BillPaymentController extends Controller
                 'amount' => ['required', 'numeric', 'min:100'],
             ],
             'Data purchase',
-            function (array $validated): array {
-                $serviceMap = [
-                    'mtn' => 'mtn-data',
-                    'airtel' => 'airtel-data',
-                    'glo' => 'glo-data',
-                    '9mobile' => '9mobile-data',
-                ];
+            function (array $validated): callable {
+                return function ($adapter) use ($validated) {
+                    $serviceMap = [
+                        'mtn' => 'mtn-data',
+                        'airtel' => 'airtel-data',
+                        'glo' => 'glo-data',
+                        '9mobile' => '9mobile-data',
+                    ];
 
-                /** @var Vtpass $vtpass */
-                $vtpass = app(Vtpass::class);
-
-                return [
-                    'serviceID' => $serviceMap[$validated['provider']] ?? $validated['provider'],
-                    'billersCode' => $validated['phone'],
-                    'variation_code' => $validated['plan'],
-                    'amount' => $validated['amount'],
-                    'request_id' => $vtpass->generateRequestId(),
-                ];
+                    return $adapter->payWithSubscription(
+                        $serviceMap[$validated['provider']] ?? $validated['provider'],
+                        $validated['phone'],
+                        $validated['plan'],
+                        'renew',
+                    );
+                };
             },
         );
     }
@@ -418,27 +344,29 @@ class BillPaymentController extends Controller
                 return $transaction;
             });
 
-            /** @var Vtpass $vtpass */
-            $vtpass = app(Vtpass::class);
-
-            $response = $vtpass->pay(
-                $serviceMap[$validated['provider']] ?? $validated['provider'],
-                (string) $amount,
-                $validated['meter_number'],
-                $validated['meter_type'],
-            );
-
             /** @var Transaction $transaction */
+            $registry = app(ProviderRegistry::class);
+
+            $result = $registry->executeWithFailover('electricity', function ($adapter) use ($validated, $serviceMap) {
+                return $adapter->pay(
+                    $serviceMap[$validated['provider']] ?? $validated['provider'],
+                    (string) $validated['amount'],
+                    $validated['meter_number'],
+                    $validated['meter_type'],
+                );
+            });
+
             /** @var BillPayment $billPayment */
             $billPayment = $transaction->billPayment;
 
-            if ($vtpass->isResponseSuccessful($response)) {
-                $token = $response['content']['Token'] ?? null;
-                $accessToken = $response['content']['AccessToken'] ?? null;
+            if ($result['success'] && !isset($result['pending'])) {
+                $content = $result['response']['content'] ?? [];
+                $token = $content['Token'] ?? null;
+                $accessToken = $content['AccessToken'] ?? null;
 
                 $transaction->update([
                     'status' => 'successful',
-                    'provider_reference' => $response['transactionId'] ?? null,
+                    'provider_reference' => $result['response']['transactionId'] ?? null,
                     'metadata' => array_merge($transaction->metadata ?? [], [
                         'token' => $token,
                         'access_token' => $accessToken,
@@ -446,15 +374,15 @@ class BillPaymentController extends Controller
                 ]);
 
                 $billPayment->update([
-                    'vtpass_request_id' => $vtpass->generateRequestId(),
-                    'vtpass_response' => $response,
+                    'vtpass_request_id' => $result['response']['request_id'] ?? null,
+                    'vtpass_response' => $result['response'],
                 ]);
 
                 Notification::create([
                     'user_id' => $user->id,
                     'type' => 'transaction',
                     'title' => 'Electricity Payment Successful',
-                    'description' => 'Electricity token purchased successfully.',
+                    'description' => 'Electricity token purchased successfully via ' . ($result['provider']?->name ?? 'provider') . '.',
                     'data' => [
                         'transaction_id' => $transaction->id,
                         'reference' => $transaction->reference,
@@ -471,34 +399,34 @@ class BillPaymentController extends Controller
                     'reference' => $transaction->reference,
                     'token' => $token,
                     'access_token' => $accessToken,
+                    'provider' => $result['provider']?->name,
                 ], 'Electricity payment successful.', 201);
-            } elseif ($vtpass->isResponsePending($response)) {
+            } elseif ($result['success'] && isset($result['pending'])) {
                 $billPayment->update([
-                    'vtpass_request_id' => $vtpass->generateRequestId(),
-                    'vtpass_response' => $response,
+                    'vtpass_request_id' => $result['response']['request_id'] ?? null,
+                    'vtpass_response' => $result['response'],
                 ]);
 
                 return $this->successResponse([
                     'transaction' => $transaction->fresh(['billPayment']),
                     'amount' => number_format($amount, 2),
                     'reference' => $transaction->reference,
+                    'provider' => $result['provider']?->name,
                 ], 'Electricity payment is being processed.', 202);
             } else {
-                DB::transaction(function () use ($transaction, $user, $totalDebit, $response, $billPayment, $vtpass) {
+                $errorMsg = $result['message'] ?? 'Unknown error';
+
+                DB::transaction(function () use ($transaction, $user, $totalDebit, $errorMsg) {
                     $transaction->update([
                         'status' => 'failed',
-                        'description' => $transaction->description . ' - ' . $vtpass->getResponseMessage($response),
-                    ]);
-
-                    $billPayment->update([
-                        'vtpass_response' => $response,
+                        'description' => $transaction->description . ' - ' . $errorMsg,
                     ]);
 
                     $user->wallet->increment('available_balance', $totalDebit);
                 });
 
                 return $this->errorResponse(
-                    'Electricity payment failed: ' . $vtpass->getResponseMessage($response),
+                    'Electricity payment failed: ' . $errorMsg,
                     422,
                 );
             }
@@ -531,17 +459,15 @@ class BillPaymentController extends Controller
                 'provider' => ['required', 'string', 'in:dstv,gotv,startimes'],
             ],
             'Cable TV subscription',
-            function (array $validated): array {
-                /** @var Vtpass $vtpass */
-                $vtpass = app(Vtpass::class);
-
-                return [
-                    'serviceID' => $validated['provider'],
-                    'billersCode' => $validated['smartcard'],
-                    'variation_code' => $validated['package'],
-                    'subscription_type' => 'renew',
-                    'request_id' => $vtpass->generateRequestId(),
-                ];
+            function (array $validated): callable {
+                return function ($adapter) use ($validated) {
+                    return $adapter->payWithSubscription(
+                        $validated['provider'],
+                        $validated['smartcard'],
+                        $validated['package'],
+                        'renew',
+                    );
+                };
             },
         );
     }
@@ -558,17 +484,15 @@ class BillPaymentController extends Controller
                 'provider' => ['required', 'string', 'in:smile,spectranet,mixx'],
             ],
             'Internet subscription',
-            function (array $validated): array {
-                /** @var Vtpass $vtpass */
-                $vtpass = app(Vtpass::class);
-
-                return [
-                    'serviceID' => $validated['provider'],
-                    'billersCode' => $validated['customer_id'],
-                    'variation_code' => $validated['plan'],
-                    'subscription_type' => 'renew',
-                    'request_id' => $vtpass->generateRequestId(),
-                ];
+            function (array $validated): callable {
+                return function ($adapter) use ($validated) {
+                    return $adapter->payWithSubscription(
+                        $validated['provider'],
+                        $validated['customer_id'],
+                        $validated['plan'],
+                        'renew',
+                    );
+                };
             },
         );
     }
@@ -586,23 +510,21 @@ class BillPaymentController extends Controller
                 'amount' => ['required', 'numeric', 'min:500'],
             ],
             'Education PIN purchase',
-            function (array $validated): array {
-                $serviceMap = [
-                    'waec' => 'waec',
-                    'neco' => 'neco',
-                    'nabteb' => 'nabteb',
-                ];
+            function (array $validated): callable {
+                return function ($adapter) use ($validated) {
+                    $serviceMap = [
+                        'waec' => 'waec',
+                        'neco' => 'neco',
+                        'nabteb' => 'nabteb',
+                    ];
 
-                /** @var Vtpass $vtpass */
-                $vtpass = app(Vtpass::class);
-
-                return [
-                    'serviceID' => $serviceMap[$validated['provider']] ?? $validated['provider'],
-                    'billersCode' => $validated['candidate_name'],
-                    'variation_code' => $validated['provider'],
-                    'quantity' => (string) $validated['quantity'],
-                    'request_id' => $vtpass->generateRequestId(),
-                ];
+                    return $adapter->payWithSubscription(
+                        $serviceMap[$validated['provider']] ?? $validated['provider'],
+                        $validated['candidate_name'],
+                        $validated['provider'],
+                        'renew',
+                    );
+                };
             },
         );
     }
@@ -619,42 +541,83 @@ class BillPaymentController extends Controller
                 'provider' => ['required', 'string', 'in:sportybet,bet9ja,betty,betking,1xbet'],
             ],
             'Betting funding',
-            function (array $validated): array {
-                $serviceMap = [
-                    'sportybet' => 'sportybet',
-                    'bet9ja' => 'bet9ja',
-                    'betty' => 'bet9ja',
-                    'betking' => 'betking',
-                    '1xbet' => '1xbet',
-                ];
+            function (array $validated): callable {
+                return function ($adapter) use ($validated) {
+                    $serviceMap = [
+                        'sportybet' => 'sportybet',
+                        'bet9ja' => 'bet9ja',
+                        'betty' => 'bet9ja',
+                        'betking' => 'betking',
+                        '1xbet' => '1xbet',
+                    ];
 
-                /** @var Vtpass $vtpass */
-                $vtpass = app(Vtpass::class);
-
-                return [
-                    'serviceID' => $serviceMap[$validated['provider']] ?? $validated['provider'],
-                    'billersCode' => $validated['user_id'],
-                    'variation_code' => $validated['provider'],
-                    'amount' => $validated['amount'],
-                    'request_id' => $vtpass->generateRequestId(),
-                ];
+                    return $adapter->pay(
+                        $serviceMap[$validated['provider']] ?? $validated['provider'],
+                        (string) $validated['amount'],
+                        $validated['user_id'],
+                        $validated['provider'],
+                    );
+                };
             },
         );
     }
 
     public function convertAirtime(Request $request): JsonResponse
     {
-        return $this->processCreditBillPayment(
-            $request,
-            'airtime_to_cash',
-            'airtime_to_cash',
-            [
-                'phone' => ['required', 'string', 'max:15'],
-                'amount' => ['required', 'numeric', 'min:100', 'max:50000'],
-                'provider' => ['required', 'string', 'in:mtn,airtel,glo,9mobile'],
-            ],
-            'Airtime to cash conversion',
-        );
+        $validated = $request->validate([
+            'phone' => ['required', 'string', 'max:15'],
+            'amount' => ['required', 'numeric', 'min:100', 'max:50000'],
+            'provider' => ['required', 'string', 'in:mtn,airtel,glo,9mobile'],
+        ]);
+
+        /** @var User $user */
+        $user = $request->user();
+
+        $amount = (float) $validated['amount'];
+
+        $transaction = DB::transaction(function () use (
+            $user,
+            $validated,
+            $amount,
+        ) {
+            $previousBalance = $user->wallet->available_balance;
+            $currentBalance = $previousBalance + $amount;
+            $reference = 'TH-' . Str::random(12);
+
+            $transaction = Transaction::create([
+                'user_id' => $user->id,
+                'wallet_id' => $user->wallet->id,
+                'category' => 'airtime_to_cash',
+                'type' => 'credit',
+                'amount' => $amount,
+                'charge' => 0.00,
+                'previous_balance' => $previousBalance,
+                'current_balance' => $currentBalance,
+                'status' => 'pending',
+                'description' => 'Airtime to cash conversion',
+                'reference' => $reference,
+                'metadata' => $validated,
+            ]);
+
+            $transaction->billPayment()->create([
+                'transaction_id' => $transaction->id,
+                'service_type' => 'airtime_to_cash',
+                'provider' => $validated['provider'],
+                'customer_id' => $validated['phone'],
+                'package' => null,
+                'quantity' => 1,
+            ]);
+
+            $user->wallet->increment('available_balance', $amount);
+
+            return $transaction;
+        });
+
+        return $this->successResponse([
+            'transaction' => $transaction->fresh(['billPayment']),
+            'amount' => number_format($amount, 2),
+            'reference' => $transaction->reference,
+        ], 'Airtime to cash conversion successful.', 201);
     }
 
     public function verifyMeter(Request $request): JsonResponse
@@ -677,17 +640,17 @@ class BillPaymentController extends Controller
         ];
 
         try {
-            /** @var Vtpass $vtpass */
-            $vtpass = app(Vtpass::class);
+            $registry = app(ProviderRegistry::class);
+            $result = $registry->executeWithFailover('electricity', function ($adapter) use ($validated, $serviceMap) {
+                return $adapter->verifyMeter(
+                    $validated['meter_number'],
+                    $serviceMap[$validated['provider']] ?? $validated['provider'],
+                    $validated['meter_type'],
+                );
+            });
 
-            $response = $vtpass->verifyMeter(
-                $validated['meter_number'],
-                $serviceMap[$validated['provider']] ?? $validated['provider'],
-                $validated['meter_type'],
-            );
-
-            if ($vtpass->isResponseSuccessful($response)) {
-                $content = $response['content'] ?? [];
+            if ($result['success']) {
+                $content = $result['response']['content'] ?? [];
 
                 return $this->successResponse([
                     'customer_name' => $content['Customer_Name'] ?? $content['customerName'] ?? null,
@@ -700,7 +663,7 @@ class BillPaymentController extends Controller
             }
 
             return $this->errorResponse(
-                'Meter verification failed: ' . $vtpass->getResponseMessage($response),
+                'Meter verification failed: ' . ($result['message'] ?? 'Unknown error'),
                 422,
             );
         } catch (\Exception $e) {
@@ -731,7 +694,7 @@ class BillPaymentController extends Controller
         $billPayment = $transaction->billPayment;
 
         if (!$billPayment || !$billPayment->vtpass_request_id) {
-            return $this->errorResponse('No VTpass request ID found for this transaction.', 422);
+            return $this->errorResponse('No provider request ID found for this transaction.', 422);
         }
 
         if ($transaction->status !== 'pending') {
@@ -742,19 +705,20 @@ class BillPaymentController extends Controller
         }
 
         try {
-            /** @var Vtpass $vtpass */
-            $vtpass = app(Vtpass::class);
-            $response = $vtpass->requery($billPayment->vtpass_request_id);
+            $registry = app(ProviderRegistry::class);
+            $result = $registry->executeWithFailover($transaction->category, function ($adapter) use ($billPayment) {
+                return $adapter->requery($billPayment->vtpass_request_id);
+            });
 
-            if ($vtpass->isResponseSuccessful($response)) {
-                DB::transaction(function () use ($transaction, $response, $vtpass, $billPayment) {
+            if ($result['success'] && !isset($result['pending'])) {
+                DB::transaction(function () use ($transaction, $result) {
                     $transaction->update([
                         'status' => 'successful',
-                        'provider_reference' => $response['transactionId'] ?? null,
+                        'provider_reference' => $result['response']['transactionId'] ?? null,
                     ]);
 
-                    $billPayment->update([
-                        'vtpass_response' => $response,
+                    $transaction->billPayment->update([
+                        'vtpass_response' => $result['response'],
                     ]);
                 });
 
@@ -773,20 +737,18 @@ class BillPaymentController extends Controller
                     'transaction' => $transaction->fresh(['billPayment']),
                     'status' => 'successful',
                 ], 'Transaction is successful.');
-            } elseif ($vtpass->isResponsePending($response)) {
+            } elseif ($result['success'] && isset($result['pending'])) {
                 return $this->successResponse([
                     'transaction' => $transaction->fresh(['billPayment']),
                     'status' => 'pending',
                 ], 'Transaction is still being processed.');
             } else {
-                DB::transaction(function () use ($transaction, $user, $response, $billPayment, $vtpass) {
+                $errorMsg = $result['message'] ?? 'Unknown error';
+
+                DB::transaction(function () use ($transaction, $user, $errorMsg) {
                     $transaction->update([
                         'status' => 'failed',
-                        'description' => $transaction->description . ' - ' . $vtpass->getResponseMessage($response),
-                    ]);
-
-                    $billPayment->update([
-                        'vtpass_response' => $response,
+                        'description' => $transaction->description . ' - ' . $errorMsg,
                     ]);
 
                     $user->wallet->increment('available_balance', $transaction->amount + $transaction->charge);
@@ -796,7 +758,7 @@ class BillPaymentController extends Controller
                     'user_id' => $user->id,
                     'type' => 'transaction',
                     'title' => $transaction->description . ' Failed',
-                    'description' => $transaction->description . ' failed: ' . $vtpass->getResponseMessage($response),
+                    'description' => $transaction->description . ' failed: ' . $errorMsg,
                     'data' => [
                         'transaction_id' => $transaction->id,
                         'reference' => $transaction->reference,
@@ -804,7 +766,7 @@ class BillPaymentController extends Controller
                 ]);
 
                 return $this->errorResponse(
-                    'Transaction failed: ' . $vtpass->getResponseMessage($response),
+                    'Transaction failed: ' . $errorMsg,
                     422,
                 );
             }

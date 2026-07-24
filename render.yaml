@@ -29,8 +29,8 @@ services:
 
   - type: static
     name: techhub-app
-    rootDir: frontend
-    buildCommand: npm install && npm run build
+    rootDir: .
+    buildCommand: bun install && bun run build
     staticPublishPath: dist
     routes:
       - type: rewrite

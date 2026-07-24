@@ -7,7 +7,7 @@ namespace App\Console\Commands;
 use App\Models\BillPayment;
 use App\Models\Notification;
 use App\Models\Transaction;
-use App\Services\Vtpass;
+use App\Services\Providers\ProviderRegistry;
 use Carbon\Carbon;
 use Illuminate\Console\Command;
 
@@ -15,7 +15,7 @@ class RequeryPendingBillPayments extends Command
 {
     protected $signature = 'bills:requery-pending';
 
-    protected $description = 'Requery pending bill payments with VTpass';
+    protected $description = 'Requery pending bill payments via provider registry';
 
     public function handle(): int
     {
@@ -37,8 +37,7 @@ class RequeryPendingBillPayments extends Command
             return Command::SUCCESS;
         }
 
-        /** @var Vtpass $vtpass */
-        $vtpass = app(Vtpass::class);
+        $registry = app(ProviderRegistry::class);
 
         $this->info("Requerying {$pendingPayments->count()} pending bill payments...");
 
@@ -47,16 +46,18 @@ class RequeryPendingBillPayments extends Command
             $transaction = $billPayment->transaction;
 
             try {
-                $response = $vtpass->requery($billPayment->vtpass_request_id);
+                $result = $registry->executeWithFailover($transaction->category, function ($adapter) use ($billPayment) {
+                    return $adapter->requery($billPayment->vtpass_request_id);
+                });
 
-                if ($vtpass->isResponseSuccessful($response)) {
+                if ($result['success'] && !isset($result['pending'])) {
                     $transaction->update([
                         'status' => 'successful',
-                        'provider_reference' => $response['transactionId'] ?? null,
+                        'provider_reference' => $result['response']['transactionId'] ?? null,
                     ]);
 
                     $billPayment->update([
-                        'vtpass_response' => $response,
+                        'vtpass_response' => $result['response'],
                     ]);
 
                     Notification::create([
@@ -72,16 +73,16 @@ class RequeryPendingBillPayments extends Command
                     ]);
 
                     $this->info("Transaction {$transaction->reference} updated to successful.");
-                } elseif ($vtpass->isResponsePending($response)) {
+                } elseif ($result['success'] && isset($result['pending'])) {
                     $this->info("Transaction {$transaction->reference} still pending.");
                 } else {
                     $transaction->update([
                         'status' => 'failed',
-                        'description' => $transaction->description . ' - ' . $vtpass->getResponseMessage($response),
+                        'description' => $transaction->description . ' - ' . ($result['message'] ?? 'Unknown error'),
                     ]);
 
                     $billPayment->update([
-                        'vtpass_response' => $response,
+                        'vtpass_response' => $result['response'] ?? null,
                     ]);
 
                     $transaction->user->wallet->increment('available_balance', $transaction->amount + $transaction->charge);
@@ -90,7 +91,7 @@ class RequeryPendingBillPayments extends Command
                         'user_id' => $transaction->user_id,
                         'type' => 'transaction',
                         'title' => 'Bill Payment Failed',
-                        'description' => $transaction->description . ' failed: ' . $vtpass->getResponseMessage($response),
+                        'description' => $transaction->description . ' failed: ' . ($result['message'] ?? 'Unknown error'),
                         'data' => [
                             'transaction_id' => $transaction->id,
                             'reference' => $transaction->reference,

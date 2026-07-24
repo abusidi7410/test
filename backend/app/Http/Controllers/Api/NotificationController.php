@@ -17,11 +17,35 @@ class NotificationController extends Controller
         /** @var User $user */
         $user = $request->user();
 
-        $notifications = $user->notifications()
+        $paginator = $user->notifications()
             ->latest()
             ->paginate($request->input('per_page', 20));
 
-        return $this->paginatedResponse($notifications);
+        $items = collect($paginator->items())->map(fn ($n) => [
+            'id' => $n->id,
+            'title' => $n->title,
+            'message' => $n->description,
+            'type' => $n->type->value,
+            'data' => $n->data,
+            'read_at' => $n->read_at?->toISOString(),
+            'created_at' => $n->created_at->toISOString(),
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Request completed successfully.',
+            'data' => [
+                'notifications' => $items,
+                'pagination' => [
+                    'total' => $paginator->total(),
+                    'per_page' => $paginator->perPage(),
+                    'current_page' => $paginator->currentPage(),
+                    'last_page' => $paginator->lastPage(),
+                    'from' => $paginator->firstItem(),
+                    'to' => $paginator->lastItem(),
+                ],
+            ],
+        ]);
     }
 
     public function markAsRead(Request $request, int $id): JsonResponse

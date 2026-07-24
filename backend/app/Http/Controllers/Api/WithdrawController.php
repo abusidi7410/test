@@ -29,18 +29,28 @@ class WithdrawController extends Controller
         $charge = 25.00;
         $totalDebit = $validated['amount'] + $charge;
 
-        if ($user->wallet->available_balance < $totalDebit) {
-            return $this->errorResponse('Insufficient wallet balance.', 422);
-        }
-
         $transaction = DB::transaction(function () use ($user, $validated, $charge, $totalDebit) {
-            $previousBalance = $user->wallet->available_balance;
+            $wallet = $user->wallet()->lockForUpdate()->first();
+
+            if (!$wallet) {
+                return null;
+            }
+
+            if ($wallet->is_locked) {
+                return 'locked';
+            }
+
+            if ($wallet->available_balance < $totalDebit) {
+                return 'insufficient';
+            }
+
+            $previousBalance = $wallet->available_balance;
             $currentBalance = $previousBalance - $totalDebit;
             $reference = 'TH-' . Str::random(12);
 
             $transaction = Transaction::create([
                 'user_id' => $user->id,
-                'wallet_id' => $user->wallet->id,
+                'wallet_id' => $wallet->id,
                 'category' => 'withdrawal',
                 'type' => 'debit',
                 'amount' => $validated['amount'],
@@ -66,10 +76,22 @@ class WithdrawController extends Controller
                 'status' => 'pending',
             ]);
 
-            $user->wallet->decrement('available_balance', $totalDebit);
+            $wallet->decrement('available_balance', $totalDebit);
 
             return $transaction;
         });
+
+        if ($transaction === null) {
+            return $this->errorResponse('User wallet not found.', 404);
+        }
+
+        if ($transaction === 'locked') {
+            return $this->errorResponse('Your wallet is locked. Please contact support.', 403);
+        }
+
+        if ($transaction === 'insufficient') {
+            return $this->errorResponse('Insufficient wallet balance.', 422);
+        }
 
         return $this->successResponse([
             'transaction' => $transaction->fresh(['bankTransfer']),

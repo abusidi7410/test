@@ -45,13 +45,17 @@ function FundWalletPage() {
   async function onSubmit(values: FundWalletInput) {
     setIsSubmitting(true);
     try {
-      await walletApi.fund({ amount: values.amount, method: values.method });
-      toast.success("Wallet funding initiated! You will be redirected to complete payment.");
-      form.reset();
+      const response = await walletApi.fund({ amount: values.amount, method: values.method });
+
+      if (!response.authorization_url) {
+        toast.error("Failed to get payment link. Please try again.");
+        return;
+      }
+
+      window.location.href = response.authorization_url;
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Something went wrong";
       toast.error(message);
-    } finally {
       setIsSubmitting(false);
     }
   }

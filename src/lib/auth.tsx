@@ -1,5 +1,6 @@
-import { createContext, useContext, useState, useEffect, type ReactNode } from "react";
+import { createContext, useContext, useState, useEffect, useCallback, useMemo, type ReactNode } from "react";
 import { authApi, type User } from "./api";
+import { TOKEN_KEY } from "./constants";
 
 interface AuthState {
   user: User | null;
@@ -7,8 +8,12 @@ interface AuthState {
   isLoading: boolean;
 }
 
+interface LoginResult {
+  is_admin?: boolean;
+}
+
 interface AuthContextType extends AuthState {
-  login: (email: string, password: string) => Promise<void>;
+  login: (email: string, password: string) => Promise<LoginResult>;
   register: (data: {
     first_name: string;
     last_name: string;
@@ -22,8 +27,6 @@ interface AuthContextType extends AuthState {
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
-
-const TOKEN_KEY = "techhub_token";
 
 function getStoredToken(): string | null {
   try {
@@ -73,14 +76,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       });
   }, []);
 
-  const login = async (email: string, password: string) => {
+  const login = useCallback(async (email: string, password: string): Promise<LoginResult> => {
     const response = await authApi.login(email, password);
     setStoredToken(response.token);
     setToken(response.token);
     setUser(response.user);
-  };
+    return { is_admin: response.is_admin };
+  }, []);
 
-  const register = async (data: {
+  const register = useCallback(async (data: {
     first_name: string;
     last_name: string;
     email: string;
@@ -92,9 +96,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setStoredToken(response.token);
     setToken(response.token);
     setUser(response.user);
-  };
+  }, []);
 
-  const logout = async () => {
+  const logout = useCallback(async () => {
     try {
       await authApi.logout();
     } catch {
@@ -103,15 +107,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setStoredToken(null);
     setToken(null);
     setUser(null);
-  };
+  }, []);
 
-  const refreshUser = async () => {
+  const refreshUser = useCallback(async () => {
     const { user } = await authApi.me();
     setUser(user);
-  };
+  }, []);
+
+  const value = useMemo(
+    () => ({ user, token, isLoading, login, register, logout, refreshUser }),
+    [user, token, isLoading, login, register, logout, refreshUser]
+  );
 
   return (
-    <AuthContext.Provider value={{ user, token, isLoading, login, register, logout, refreshUser }}>
+    <AuthContext.Provider value={value}>
       {children}
     </AuthContext.Provider>
   );

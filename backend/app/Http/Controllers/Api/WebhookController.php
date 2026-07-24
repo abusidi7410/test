@@ -8,6 +8,7 @@ use App\Http\Controllers\Controller;
 use App\Models\BillPayment;
 use App\Models\Notification;
 use App\Models\Transaction;
+use App\Services\Providers\ProviderRegistry;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -46,16 +47,19 @@ class WebhookController extends Controller
             return response()->json(['response' => 'success']);
         }
 
-        $vtpass = app(\App\Services\Vtpass::class);
+        $registry = app(ProviderRegistry::class);
+        $adapter = $registry->getForService($transaction->category);
 
-        if ($vtpass->isResponseSuccessful($request->all())) {
+        $response = $request->all();
+
+        if ($adapter->isResponseSuccessful($response)) {
             $transaction->update([
                 'status' => 'successful',
                 'provider_reference' => $request->input('transactionId'),
             ]);
 
             $billPayment->update([
-                'vtpass_response' => $request->all(),
+                'vtpass_response' => $response,
             ]);
 
             Notification::create([
@@ -74,18 +78,18 @@ class WebhookController extends Controller
                 'request_id' => $requestId,
                 'transaction_id' => $transaction->id,
             ]);
-        } elseif ($vtpass->isResponsePending($request->all())) {
+        } elseif ($adapter->isResponsePending($response)) {
             Log::info('VTpass webhook: transaction still pending', [
                 'request_id' => $requestId,
             ]);
         } else {
             $transaction->update([
                 'status' => 'failed',
-                'description' => $transaction->description . ' - ' . $vtpass->getResponseMessage($request->all()),
+                'description' => $transaction->description . ' - ' . $adapter->getResponseMessage($response),
             ]);
 
             $billPayment->update([
-                'vtpass_response' => $request->all(),
+                'vtpass_response' => $response,
             ]);
 
             $transaction->user->wallet->increment('available_balance', $transaction->amount + $transaction->charge);
@@ -94,7 +98,7 @@ class WebhookController extends Controller
                 'user_id' => $transaction->user_id,
                 'type' => 'transaction',
                 'title' => 'Bill Payment Failed',
-                'description' => $transaction->description . ' failed: ' . $vtpass->getResponseMessage($request->all()),
+                'description' => $transaction->description . ' failed: ' . $adapter->getResponseMessage($response),
                 'data' => [
                     'transaction_id' => $transaction->id,
                     'reference' => $transaction->reference,

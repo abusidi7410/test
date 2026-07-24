@@ -15,7 +15,7 @@ export const registerSchema = z
     phone: z.string().optional(),
     password: z.string().min(8, "Password must be at least 8 characters"),
     password_confirmation: z.string(),
-    terms: z.boolean().refine((val) => val === true, {
+    terms: z.coerce.boolean().refine((val) => val === true, {
       message: "You must accept the terms and conditions",
     }),
   })

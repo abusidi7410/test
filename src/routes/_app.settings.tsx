@@ -224,8 +224,8 @@ function SettingsPage() {
             <CardContent className="p-6">
               {[
                 { icon: Globe, name: "Google", status: "Connected" },
-                { icon: Smartphone, name: "Apple", status: "Not connected" },
-                { icon: Bell, name: "Microsoft", status: "Not connected" },
+                { icon: Bell, name: "Facebook", status: "Not connected" },
+                { icon: Smartphone, name: "TikTok", status: "Not connected" },
               ].map((c, i, arr) => (
                 <div key={c.name}>
                   <div className="flex items-center gap-3 py-4">

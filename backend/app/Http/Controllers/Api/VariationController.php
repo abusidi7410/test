@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Services\Vtpass;
+use App\Services\Providers\ProviderRegistry;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -14,9 +14,14 @@ class VariationController extends Controller
     public function getVariations(Request $request, string $serviceId): JsonResponse
     {
         try {
-            /** @var Vtpass $vtpass */
-            $vtpass = app(Vtpass::class);
-            $variations = $vtpass->getServiceVariations($serviceId);
+            $registry = app(ProviderRegistry::class);
+            $adapter = $registry->getForService($serviceId);
+
+            if (!$adapter) {
+                return $this->errorResponse('No active provider available for this service.', 404);
+            }
+
+            $variations = $adapter->getServiceVariations($serviceId);
 
             if (empty($variations['content']['variations'])) {
                 return $this->errorResponse('No variations found for this service.', 404);

@@ -1,6 +1,8 @@
+import { TOKEN_KEY } from "./constants";
+
 const API_BASE = import.meta.env.VITE_API_URL || "/api";
 
-interface ApiError {
+interface ApiErrorResponse {
   message: string;
   errors?: Record<string, string[]>;
 }
@@ -132,7 +134,7 @@ class ApiError extends Error {
 
 export async function apiFetch<T>(path: string, options: RequestInit = {}): Promise<T> {
   const url = `${API_BASE}${path}`;
-  const token = localStorage.getItem("techhub_token");
+  const token = localStorage.getItem(TOKEN_KEY);
 
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
@@ -150,9 +152,13 @@ export async function apiFetch<T>(path: string, options: RequestInit = {}): Prom
   });
 
   if (response.status === 401) {
-    localStorage.removeItem("techhub_token");
-    window.location.href = "/login";
-    throw new ApiError("Unauthorized", 401);
+    const body = await response.json().catch(() => null);
+    const message = body?.message || "Unauthorized";
+    if (token) {
+      localStorage.removeItem(TOKEN_KEY);
+      window.location.href = "/login";
+    }
+    throw new ApiError(message, 401);
   }
 
   const data = await response.json();
@@ -161,12 +167,17 @@ export async function apiFetch<T>(path: string, options: RequestInit = {}): Prom
     throw new ApiError(data.message || "An error occurred", response.status, data.errors);
   }
 
+  if (data && typeof data === "object" && "data" in data) {
+    return data.data as T;
+  }
+
   return data as T;
 }
 
 interface LoginResponse {
   user: User;
   token: string;
+  is_admin?: boolean;
 }
 
 interface RegisterResponse {
@@ -254,11 +265,26 @@ export const authApi = {
   me() {
     return apiFetch<{ user: User }>("/auth/me");
   },
+
+  forgotPassword(email: string) {
+    return apiFetch<{ message: string }>("/auth/forgot-password", {
+      method: "POST",
+      body: JSON.stringify({ email }),
+    });
+  },
 };
+
+export interface PaymentVerifyResponse {
+  status: "success" | "pending" | "failed";
+  reference: string;
+  amount: number;
+  balance: number;
+  message: string;
+}
 
 export const walletApi = {
   show() {
-    return apiFetch<{ wallet: Wallet }>("/wallet");
+    return apiFetch<Wallet>("/wallet");
   },
 
   fund(data: { amount: number; method: string }) {
@@ -266,6 +292,12 @@ export const walletApi = {
       method: "POST",
       body: JSON.stringify(data),
     });
+  },
+};
+
+export const paymentApi = {
+  verify(reference: string) {
+    return apiFetch<PaymentVerifyResponse>(`/payment/verify/${encodeURIComponent(reference)}`);
   },
 };
 
@@ -291,8 +323,9 @@ export const transactionApi = {
 };
 
 export const profileApi = {
-  show() {
-    return apiFetch<{ profile: Profile }>("/profile");
+  async show(): Promise<Profile> {
+    const res = await apiFetch<{ profile: Profile }>("/profile");
+    return res.profile;
   },
 
   update(data: { first_name: string; last_name: string; phone?: string }) {
@@ -315,12 +348,14 @@ export const profileApi = {
 };
 
 export const notificationApi = {
-  list() {
-    return apiFetch<{ notifications: Notification[] }>("/notifications");
+  async list(): Promise<Notification[]> {
+    const res = await apiFetch<{ notifications: Notification[] }>("/notifications");
+    return res.notifications;
   },
 
-  unreadCount() {
-    return apiFetch<NotificationCountResponse>("/notifications/unread-count");
+  async unreadCount(): Promise<number> {
+    const res = await apiFetch<NotificationCountResponse>("/notifications/unread-count");
+    return typeof res === "number" ? res : res.count ?? 0;
   },
 
   markRead(id: number) {
@@ -343,8 +378,9 @@ export const referralApi = {
 };
 
 export const settingsApi = {
-  show() {
-    return apiFetch<{ settings: AppSettings }>("/settings");
+  async show(): Promise<AppSettings> {
+    const res = await apiFetch<{ settings: AppSettings }>("/settings");
+    return res.settings;
   },
 
   update(data: AppSettings) {

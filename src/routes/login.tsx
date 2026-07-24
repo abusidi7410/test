@@ -27,6 +27,24 @@ export const Route = createFileRoute("/login")({
   component: LoginPage,
 });
 
+function formatLoginError(err: unknown): string {
+  if (
+    err &&
+    typeof err === "object" &&
+    "errors" in err &&
+    err.errors &&
+    typeof err.errors === "object"
+  ) {
+    const errors = err.errors as Record<string, string[]>;
+    const messages = Object.entries(errors)
+      .map(([field, msgs]) => `${field.replace(/_/g, " ")}: ${msgs.join(", ")}`)
+      .join("\n");
+    if (messages) return messages;
+  }
+  if (err instanceof Error) return err.message;
+  return "Login failed. Please try again.";
+}
+
 function LoginPage() {
   const [show, setShow] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -44,11 +62,15 @@ function LoginPage() {
   const onSubmit = async (data: LoginInput) => {
     setIsSubmitting(true);
     try {
-      await login(data.email, data.password);
+      const result = await login(data.email, data.password);
       toast.success("Welcome back!");
-      navigate({ to: "/dashboard" });
+      if (result.is_admin) {
+        navigate({ to: "/admin/dashboard" });
+      } else {
+        navigate({ to: "/dashboard" });
+      }
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Login failed. Please try again.");
+      toast.error(formatLoginError(err));
     } finally {
       setIsSubmitting(false);
     }

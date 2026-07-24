@@ -8,6 +8,7 @@ import { AuthLayout } from "@/components/layout/AuthLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { authApi } from "@/lib/api";
 import { forgotPasswordSchema, type ForgotPasswordInput } from "@/lib/validations";
 
 export const Route = createFileRoute("/forgot-password")({
@@ -31,10 +32,13 @@ function ForgotPage() {
     resolver: zodResolver(forgotPasswordSchema),
   });
 
-  const onSubmit = async (_data: ForgotPasswordInput) => {
+  const onSubmit = async (data: ForgotPasswordInput) => {
     setIsSubmitting(true);
     try {
+      await authApi.forgotPassword(data.email);
       toast.success("Reset link sent to your email.");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to send reset link. Please try again.");
     } finally {
       setIsSubmitting(false);
     }

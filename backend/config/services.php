@@ -5,7 +5,8 @@ return [
         'secret_key' => env('PAYSTACK_SECRET_KEY'),
         'public_key' => env('PAYSTACK_PUBLIC_KEY'),
         'webhook_secret' => env('PAYSTACK_WEBHOOK_SECRET'),
-        'base_url' => 'https://api.paystack.co',
+        'base_url' => env('PAYSTACK_BASE_URL', 'https://api.paystack.co'),
+        'callback_url' => env('PAYSTACK_CALLBACK_URL'),
     ],
 
     'vtpass' => [
@@ -18,7 +19,7 @@ return [
     'google' => [
         'client_id' => env('GOOGLE_CLIENT_ID'),
         'client_secret' => env('GOOGLE_CLIENT_SECRET'),
-        'redirect' => env('GOOGLE_REDIRECT_URL'),
+        'redirect' => env('GOOGLE_REDIRECT_URL', env('APP_URL', 'http://localhost:8000') . '/api/auth/social/google/callback'),
     ],
 
     'facebook' => [
