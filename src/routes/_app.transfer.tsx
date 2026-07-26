@@ -1,4 +1,5 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { Send, Loader2 } from "lucide-react";
 import { useForm } from "react-hook-form";
@@ -27,6 +28,9 @@ import {
 import { transferSchema, type TransferInput } from "@/lib/validations";
 import { transferApi } from "@/lib/api";
 import { banks } from "@/lib/utils";
+import { useAuth } from "@/lib/auth";
+import { PinVerifyDialog } from "@/components/PinVerifyDialog";
+import { updateWalletBalance } from "@/lib/queries";
 
 export const Route = createFileRoute("/_app/transfer")({
   head: () => ({ meta: [{ title: "Transfer — TechHub" }] }),
@@ -35,6 +39,11 @@ export const Route = createFileRoute("/_app/transfer")({
 
 function TransferPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [pinDialogOpen, setPinDialogOpen] = useState(false);
+  const [pendingValues, setPendingValues] = useState<TransferInput | null>(null);
+  const { hasPin } = useAuth();
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
 
   const form = useForm<TransferInput>({
     resolver: zodResolver(transferSchema),
@@ -42,16 +51,28 @@ function TransferPage() {
   });
 
   async function onSubmit(values: TransferInput) {
+    if (!hasPin) {
+      navigate({ to: "/setup-pin" });
+      return;
+    }
+    setPendingValues(values);
+    setPinDialogOpen(true);
+  }
+
+  async function executeTransfer(pin: string) {
+    if (!pendingValues) return;
     setIsSubmitting(true);
     try {
-      await transferApi.store({
-        recipient_bank: values.recipient_bank,
-        account_number: values.account_number,
-        amount: values.amount,
-        narration: values.narration || undefined,
-      });
+      const result = await transferApi.store({
+        recipient_bank: pendingValues.recipient_bank,
+        account_number: pendingValues.account_number,
+        amount: pendingValues.amount,
+        narration: pendingValues.narration || undefined,
+      }, pin);
       toast.success("Transfer successful!");
+      updateWalletBalance(queryClient, result?.new_balance);
       form.reset();
+      setPendingValues(null);
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Something went wrong";
       toast.error(message);
@@ -204,6 +225,12 @@ function TransferPage() {
           </Card>
         </motion.div>
       </div>
+
+      <PinVerifyDialog
+        open={pinDialogOpen}
+        onOpenChange={setPinDialogOpen}
+        onVerified={(pin) => executeTransfer(pin)}
+      />
     </div>
   );
 }

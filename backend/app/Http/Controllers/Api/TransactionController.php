@@ -18,7 +18,10 @@ class TransactionController extends Controller
         /** @var User $user */
         $user = $request->user();
 
-        $query = $user->transactions()->with(['billPayment', 'bankTransfer']);
+        $query = $user->transactions()
+            ->with(['billPayment' => fn ($q) => $q->select(['id', 'transaction_id', 'service_type', 'provider', 'vtpass_request_id']),
+                   'bankTransfer' => fn ($q) => $q->select(['id', 'transaction_id', 'recipient_bank', 'recipient_account', 'recipient_name', 'amount', 'status'])])
+            ->select(['id', 'uuid', 'reference', 'type', 'category', 'amount', 'charge', 'status', 'description', 'metadata', 'created_at']);
 
         if ($request->filled('category')) {
             $query->where('category', $request->input('category'));
@@ -95,6 +98,23 @@ class TransactionController extends Controller
         $startDate = Carbon::now()->subDays(6)->startOfDay();
         $endDate = Carbon::now()->endOfDay();
 
+        // Single query for all spending stats instead of 4 separate queries
+        $stats = $user->transactions()
+            ->where('type', 'debit')
+            ->where('status', 'successful')
+            ->selectRaw('
+                SUM(CASE WHEN created_at >= ? THEN amount ELSE 0 END) as today,
+                SUM(CASE WHEN created_at >= ? AND created_at <= ? THEN amount ELSE 0 END) as week,
+                SUM(CASE WHEN EXTRACT(MONTH FROM created_at) = ? AND EXTRACT(YEAR FROM created_at) = ? THEN amount ELSE 0 END) as month
+            ', [
+                Carbon::today()->toDateTimeString(),
+                $startDate->toDateTimeString(),
+                $endDate->toDateTimeString(),
+                Carbon::now()->month,
+                Carbon::now()->year,
+            ])
+            ->first();
+
         $dailySpending = $user->transactions()
             ->where('type', 'debit')
             ->where('status', 'successful')
@@ -112,29 +132,10 @@ class TransactionController extends Controller
             ];
         }
 
-        $todaySpending = $user->transactions()
-            ->where('type', 'debit')
-            ->where('status', 'successful')
-            ->whereDate('created_at', Carbon::today())
-            ->sum('amount');
-
-        $weekSpending = $user->transactions()
-            ->where('type', 'debit')
-            ->where('status', 'successful')
-            ->whereBetween('created_at', [$startDate, $endDate])
-            ->sum('amount');
-
-        $monthSpending = $user->transactions()
-            ->where('type', 'debit')
-            ->where('status', 'successful')
-            ->whereMonth('created_at', Carbon::now()->month)
-            ->whereYear('created_at', Carbon::now()->year)
-            ->sum('amount');
-
         return $this->successResponse([
-            'today' => (float) number_format($todaySpending, 2, '.', ''),
-            'week' => (float) number_format($weekSpending, 2, '.', ''),
-            'month' => (float) number_format($monthSpending, 2, '.', ''),
+            'today' => (float) number_format($stats->today ?? 0, 2, '.', ''),
+            'week' => (float) number_format($stats->week ?? 0, 2, '.', ''),
+            'month' => (float) number_format($stats->month ?? 0, 2, '.', ''),
             'series' => $series,
         ]);
     }

@@ -1,11 +1,11 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { Tv, Loader2 } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -29,6 +29,9 @@ import {
 import { cableTvSchema, type CableTvInput } from "@/lib/validations";
 import { billsApi, variationsApi, type Variation } from "@/lib/api";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/lib/auth";
+import { PinVerifyDialog } from "@/components/PinVerifyDialog";
+import { updateWalletBalance } from "@/lib/queries";
 
 const providers = [
   { name: "DSTV", value: "dstv", color: "#00539F" },
@@ -43,6 +46,11 @@ export const Route = createFileRoute("/_app/cable-tv")({
 
 function CableTvPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [pinDialogOpen, setPinDialogOpen] = useState(false);
+  const [pendingValues, setPendingValues] = useState<CableTvInput | null>(null);
+  const { hasPin } = useAuth();
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
 
   const form = useForm<CableTvInput>({
     resolver: zodResolver(cableTvSchema),
@@ -62,24 +70,37 @@ function CableTvPage() {
   const packages: Variation[] = variationsResponse?.data?.variations ?? [];
 
   async function onSubmit(values: CableTvInput) {
+    if (!hasPin) {
+      navigate({ to: "/setup-pin" });
+      return;
+    }
+    setPendingValues(values);
+    setPinDialogOpen(true);
+  }
+
+  async function executeCableTv(pin: string) {
+    if (!pendingValues) return;
     setIsSubmitting(true);
     try {
-      await billsApi.subscribeCable({
-        smartcard: values.smartcard,
-        package: values.package,
-        provider: values.provider,
-      });
+      const result = await billsApi.subscribeCable({
+        smartcard: pendingValues.smartcard,
+        package: pendingValues.package,
+        provider: pendingValues.provider,
+      }, pin);
       toast.success("Cable TV subscription successful!");
+      updateWalletBalance(queryClient, result?.new_balance);
       form.reset();
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Something went wrong";
       toast.error(message);
     } finally {
       setIsSubmitting(false);
+      setPinDialogOpen(false);
     }
   }
 
   return (
+    <>
     <div>
       <PageHeader
         title="Cable TV subscription"
@@ -234,5 +255,11 @@ function CableTvPage() {
         </motion.div>
       </div>
     </div>
+    <PinVerifyDialog
+      open={pinDialogOpen}
+      onOpenChange={setPinDialogOpen}
+      onVerified={(pin) => executeCableTv(pin)}
+    />
+    </>
   );
 }

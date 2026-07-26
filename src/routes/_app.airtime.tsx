@@ -1,4 +1,5 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { Smartphone, Loader2 } from "lucide-react";
 import { useForm } from "react-hook-form";
@@ -21,6 +22,9 @@ import {
 import { airtimeSchema, type AirtimeInput } from "@/lib/validations";
 import { billsApi } from "@/lib/api";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/lib/auth";
+import { PinVerifyDialog } from "@/components/PinVerifyDialog";
+import { updateWalletBalance } from "@/lib/queries";
 
 const providers = [
   { name: "MTN", value: "mtn", color: "#FFCC00" },
@@ -36,6 +40,11 @@ export const Route = createFileRoute("/_app/airtime")({
 
 function AirtimePage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [pinDialogOpen, setPinDialogOpen] = useState(false);
+  const [pendingValues, setPendingValues] = useState<AirtimeInput | null>(null);
+  const { hasPin } = useAuth();
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
 
   const form = useForm<AirtimeInput>({
     resolver: zodResolver(airtimeSchema),
@@ -43,15 +52,27 @@ function AirtimePage() {
   });
 
   async function onSubmit(values: AirtimeInput) {
+    if (!hasPin) {
+      navigate({ to: "/setup-pin" });
+      return;
+    }
+    setPendingValues(values);
+    setPinDialogOpen(true);
+  }
+
+  async function executeAirtime(pin: string) {
+    if (!pendingValues) return;
     setIsSubmitting(true);
     try {
-      await billsApi.buyAirtime({
-        phone: values.phone,
-        amount: values.amount,
-        provider: values.provider,
-      });
+      const result = await billsApi.buyAirtime({
+        phone: pendingValues.phone,
+        amount: pendingValues.amount,
+        provider: pendingValues.provider,
+      }, pin);
       toast.success("Airtime purchased successfully!");
+      updateWalletBalance(queryClient, result?.new_balance);
       form.reset();
+      setPendingValues(null);
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Something went wrong";
       toast.error(message);
@@ -197,6 +218,12 @@ function AirtimePage() {
           </Card>
         </motion.div>
       </div>
+
+      <PinVerifyDialog
+        open={pinDialogOpen}
+        onOpenChange={setPinDialogOpen}
+        onVerified={(pin) => executeAirtime(pin)}
+      />
     </div>
   );
 }

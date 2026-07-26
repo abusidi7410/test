@@ -47,6 +47,13 @@ class PaystackService
         }
 
         try {
+            Log::info('Paystack API: initializing transaction', [
+                'reference' => $reference,
+                'amount_kobo' => $amountInKobo,
+                'email' => $email,
+                'callback_url' => $callbackUrl,
+            ]);
+
             $response = Http::withHeaders([
                 'Authorization' => 'Bearer ' . $this->secretKey,
                 'Content-Type' => 'application/json',
@@ -82,10 +89,23 @@ class PaystackService
     public function verifyTransaction(string $reference): ?array
     {
         try {
+            Log::info('Paystack API: verifying transaction', [
+                'reference' => $reference,
+            ]);
+
             $response = Http::withHeaders([
                 'Authorization' => 'Bearer ' . $this->secretKey,
                 'Accept' => 'application/json',
             ])->timeout(30)->get($this->baseUrl . '/transaction/verify/' . $reference);
+
+            $responseBody = $response->json();
+
+            Log::info('Paystack API: verify response', [
+                'reference' => $reference,
+                'status_code' => $response->status(),
+                'paystack_status' => $responseBody['data']['status'] ?? 'unknown',
+                'amount' => isset($responseBody['data']['amount']) ? $responseBody['data']['amount'] / 100 : null,
+            ]);
 
             if ($response->successful() && $response->json('status') === true) {
                 return $response->json('data');
@@ -93,7 +113,7 @@ class PaystackService
 
             Log::warning('Paystack transaction verification failed', [
                 'reference' => $reference,
-                'response' => $response->json(),
+                'response' => $responseBody,
             ]);
 
             return null;

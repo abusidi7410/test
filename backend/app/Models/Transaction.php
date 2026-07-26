@@ -40,7 +40,11 @@ class Transaction extends Model
         'paid_at',
         'metadata',
         'webhook_payload',
+        'ip_address',
+        'user_agent',
     ];
+
+    protected $appends = ['service', 'direction'];
 
     protected function casts(): array
     {
@@ -78,5 +82,15 @@ class Transaction extends Model
     public function billPayment(): HasOne
     {
         return $this->hasOne(BillPayment::class);
+    }
+
+    public function getServiceAttribute(): string
+    {
+        return $this->category->value;
+    }
+
+    public function getDirectionAttribute(): string
+    {
+        return $this->type === TransactionType::CREDIT ? 'in' : 'out';
     }
 }

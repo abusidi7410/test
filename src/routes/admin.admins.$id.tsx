@@ -39,7 +39,7 @@ function AdminAdminDetailPage() {
     email: "",
   });
 
-  const admin = data?.user;
+  const admin = data?.admin;
 
   useEffect(() => {
     if (admin) {
@@ -55,6 +55,7 @@ function AdminAdminDetailPage() {
     mutationFn: () => adminAdmins.update(adminId, form),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin", "admins"] });
+      queryClient.invalidateQueries({ queryKey: ["admin", "admin", adminId] });
     },
   });
 

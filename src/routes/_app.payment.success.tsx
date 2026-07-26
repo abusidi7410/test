@@ -1,12 +1,12 @@
 import { createFileRoute, Link, useNavigate, useSearch } from "@tanstack/react-router";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { CheckCircle, XCircle, Loader2, ArrowLeft, RefreshCw } from "lucide-react";
+import { CheckCircle, XCircle, Loader2, ArrowLeft, RefreshCw, LogIn } from "lucide-react";
 import { motion } from "framer-motion";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { useQueryClient } from "@tanstack/react-query";
-import { paymentApi, type PaymentVerifyResponse } from "@/lib/api";
+import { paymentApi, type PaymentVerifyResponse, ApiError } from "@/lib/api";
 import { formatNaira } from "@/lib/utils";
 
 export const Route = createFileRoute("/_app/payment/success")({
@@ -17,6 +17,7 @@ export const Route = createFileRoute("/_app/payment/success")({
 type VerifyState =
   | { status: "loading" }
   | { status: "success"; data: PaymentVerifyResponse }
+  | { status: "auth_required"; reference: string }
   | { status: "error"; message: string };
 
 function PaymentSuccessPage() {
@@ -60,8 +61,12 @@ function PaymentSuccessPage() {
         });
       }
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : "Verification failed. Please try again.";
-      setState({ status: "error", message });
+      if (err instanceof ApiError && err.status === 401) {
+        setState({ status: "auth_required", reference });
+      } else {
+        const message = err instanceof Error ? err.message : "Verification failed. Please try again.";
+        setState({ status: "error", message });
+      }
     } finally {
       setRetrying(false);
     }
@@ -146,6 +151,35 @@ function PaymentSuccessPage() {
                     <Link to="/wallet">
                       <ArrowLeft className="mr-1.5 h-4 w-4" />
                       View Wallet
+                    </Link>
+                  </Button>
+                </div>
+              </>
+            )}
+
+            {/* Auth required */}
+            {state.status === "auth_required" && (
+              <>
+                <div className="mx-auto mb-4 grid h-16 w-16 place-items-center rounded-full bg-amber-100 dark:bg-amber-900/30">
+                  <LogIn className="h-8 w-8 text-amber-600 dark:text-amber-400" />
+                </div>
+                <h2 className="text-xl font-semibold">Session Expired</h2>
+                <p className="mt-2 text-sm text-muted-foreground">
+                  Your session expired. Please log in again to verify your payment.
+                </p>
+                {reference && (
+                  <p className="mt-3 rounded-lg bg-muted px-3 py-2 font-mono text-xs text-muted-foreground">
+                    Reference: {reference}
+                  </p>
+                )}
+                <p className="mt-3 text-xs text-muted-foreground">
+                  Your payment was processed by Paystack. After logging in, your wallet will be credited automatically.
+                </p>
+                <div className="mt-6 flex flex-col gap-3">
+                  <Button asChild>
+                    <Link to="/login">
+                      <LogIn className="mr-1.5 h-4 w-4" />
+                      Log In
                     </Link>
                   </Button>
                 </div>

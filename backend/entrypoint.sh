@@ -1,0 +1,1 @@
+﻿#!/bin/shset -ephp artisan migrate --forcephp artisan config:clear || truephp artisan cache:clear || trueexec php artisan serve --host=0.0.0.0 --port=${PORT:-8000}

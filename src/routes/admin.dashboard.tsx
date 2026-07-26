@@ -74,6 +74,7 @@ function AdminDashboardPage() {
   const { data: stats, isLoading, isError, error } = useQuery<AdminDashboardStats>({
     queryKey: ["admin", "dashboard"],
     queryFn: () => adminDashboard.getStats(),
+    staleTime: 60_000,
   });
 
   const recentTx = stats?.recent_transactions ?? [];

@@ -7,6 +7,8 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Transaction;
 use App\Models\User;
+use App\Models\WalletHistory;
+use App\Models\AuditLog;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -29,7 +31,7 @@ class TransferController extends Controller
         $charge = 10.00;
         $totalDebit = $validated['amount'] + $charge;
 
-        $transaction = DB::transaction(function () use ($user, $validated, $charge, $totalDebit) {
+        $transaction = DB::transaction(function () use ($user, $validated, $charge, $totalDebit, $request) {
             $wallet = $user->wallet()->lockForUpdate()->first();
 
             if (!$wallet) {
@@ -64,6 +66,8 @@ class TransferController extends Controller
                     'recipient_bank' => $validated['recipient_bank'],
                     'recipient_account' => $validated['account_number'],
                 ],
+                'ip_address' => $request->ip(),
+                'user_agent' => $request->userAgent(),
             ]);
 
             $transaction->bankTransfer()->create([
@@ -76,6 +80,28 @@ class TransferController extends Controller
             ]);
 
             $wallet->decrement('available_balance', $totalDebit);
+
+            WalletHistory::create([
+                'wallet_id' => $wallet->id,
+                'user_id' => $user->id,
+                'transaction_id' => $transaction->id,
+                'type' => 'debit',
+                'amount' => $totalDebit,
+                'balance_before' => $previousBalance,
+                'balance_after' => $currentBalance,
+                'description' => $transaction->description,
+                'reference' => $reference,
+            ]);
+
+            AuditLog::create([
+                'user_id' => $user->id,
+                'event' => 'wallet_debited',
+                'auditable_type' => Transaction::class,
+                'auditable_id' => $transaction->id,
+                'description' => $transaction->description,
+                'old_values' => ['balance' => $previousBalance],
+                'new_values' => ['balance' => $currentBalance],
+            ]);
 
             return $transaction;
         });
@@ -98,6 +124,7 @@ class TransferController extends Controller
             'charge' => number_format($charge, 2),
             'total_debited' => number_format($totalDebit, 2),
             'reference' => $transaction->reference,
+            'new_balance' => (float) $transaction->fresh()->current_balance,
         ], 'Transfer initiated successfully.', 201);
     }
 }

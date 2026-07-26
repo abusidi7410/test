@@ -34,6 +34,8 @@ class User extends Authenticatable
         'phone_verified_at',
         'two_factor_enabled',
         'two_factor_secret',
+        'transaction_pin',
+        'pin_set_at',
         'status',
         'last_login_at',
     ];
@@ -42,13 +44,29 @@ class User extends Authenticatable
     {
         return [
             'password' => 'hashed',
+            'transaction_pin' => 'hashed',
             'email_verified_at' => 'datetime',
             'phone_verified_at' => 'datetime',
+            'pin_set_at' => 'datetime',
             'two_factor_enabled' => 'boolean',
             'last_login_at' => 'datetime',
             'level' => AccountLevel::class,
             'status' => UserStatus::class,
         ];
+    }
+
+    public function hasTransactionPin(): bool
+    {
+        return $this->pin_set_at !== null;
+    }
+
+    public function verifyTransactionPin(string $pin): bool
+    {
+        if (!$this->hasTransactionPin()) {
+            return false;
+        }
+
+        return \Illuminate\Support\Facades\Hash::check($pin, $this->transaction_pin);
     }
 
     public function wallet(): HasOne
@@ -89,5 +107,10 @@ class User extends Authenticatable
     public function bankAccounts(): HasMany
     {
         return $this->hasMany(BankAccount::class);
+    }
+
+    public function giftCards(): HasMany
+    {
+        return $this->hasMany(GiftCard::class);
     }
 }

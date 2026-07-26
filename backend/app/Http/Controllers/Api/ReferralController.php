@@ -14,13 +14,18 @@ class ReferralController extends Controller
     public function index(Request $request): JsonResponse
     {
         /** @var User $user */
-        $user = $request->user()->load(['referrals.referred', 'referrals.earnings']);
+        $user = $request->user()->load([
+            'referrals.referred' => fn ($q) => $q->select(['id', 'first_name', 'last_name', 'email']),
+            'referrals.earnings',
+        ]);
 
-        $totalReferrals = $user->referrals()->count();
-        $completedReferrals = $user->referrals()->where('status', 'completed')->count();
-        $totalEarnings = $user->referrals()->sum('reward_amount');
+        // Use already-loaded collection instead of 3 separate count/sum queries
+        $referrals = $user->referrals;
+        $totalReferrals = $referrals->count();
+        $completedReferrals = $referrals->where('status.value', 'completed')->count();
+        $totalEarnings = $referrals->sum('reward_amount');
 
-        $referrals = $user->referrals->map(fn ($ref) => [
+        $referralList = $referrals->map(fn ($ref) => [
             'id' => $ref->id,
             'name' => $ref->referred ? $ref->referred->first_name . ' ' . $ref->referred->last_name : 'Unknown',
             'email' => $ref->referred?->email ?? 'unknown',
@@ -35,7 +40,7 @@ class ReferralController extends Controller
             'total_earned' => (float) $totalEarnings,
             'total_referrals' => $totalReferrals,
             'completed_referrals' => $completedReferrals,
-            'referrals' => $referrals,
+            'referrals' => $referralList,
         ]);
     }
 

@@ -3,57 +3,75 @@
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\DB;
 
 return new class extends Migration
 {
+    private function addIndexIfMissing(string $table, $columns, bool $unique = false): void
+    {
+        $indexName = is_array($columns)
+            ? $table . '_' . implode('_', $columns) . '_index'
+            : $table . '_' . $columns . '_index';
+
+        if ($unique) {
+            $indexName = is_array($columns)
+                ? $table . '_' . implode('_', $columns) . '_unique'
+                : $table . '_' . $columns . '_unique';
+        }
+
+        $exists = DB::select(
+            "SELECT 1 FROM pg_indexes WHERE tablename = ? AND indexname = ?",
+            [$table, $indexName]
+        );
+
+        if (empty($exists)) {
+            Schema::table($table, function (Blueprint $table) use ($columns, $unique) {
+                if ($unique) {
+                    $table->unique($columns);
+                } else {
+                    $table->index($columns);
+                }
+            });
+        }
+    }
+
     public function up(): void
     {
-        Schema::table('transactions', function (Blueprint $table) {
-            $table->index('category');
-            $table->index('type');
-            $table->index(['user_id', 'created_at']);
-            $table->index(['status', 'created_at']);
-            $table->index('reference');
-            $table->index('provider_reference');
-            $table->index(['wallet_id', 'created_at']);
-            $table->index('gateway');
-        });
+        // transactions indexes
+        foreach (['category', 'type', 'reference', 'provider_reference', 'gateway'] as $col) {
+            $this->addIndexIfMissing('transactions', $col);
+        }
+        $this->addIndexIfMissing('transactions', ['user_id', 'created_at']);
+        $this->addIndexIfMissing('transactions', ['status', 'created_at']);
+        $this->addIndexIfMissing('transactions', ['wallet_id', 'created_at']);
 
-        Schema::table('bill_payments', function (Blueprint $table) {
-            $table->index('vtpass_request_id');
-            $table->index('service_type');
-            $table->index('provider');
-        });
+        // bill_payments indexes
+        foreach (['vtpass_request_id', 'service_type', 'provider'] as $col) {
+            $this->addIndexIfMissing('bill_payments', $col);
+        }
 
-        Schema::table('notifications', function (Blueprint $table) {
-            $table->index(['user_id', 'created_at']);
-            $table->index('read_at');
-        });
+        // notifications indexes
+        $this->addIndexIfMissing('notifications', ['user_id', 'created_at']);
+        $this->addIndexIfMissing('notifications', 'read_at');
 
-        Schema::table('bank_accounts', function (Blueprint $table) {
-            $table->index('is_default');
-        });
+        // bank_accounts indexes
+        $this->addIndexIfMissing('bank_accounts', 'is_default');
 
-        Schema::table('referrals', function (Blueprint $table) {
-            $table->index('status');
-        });
+        // referrals indexes
+        $this->addIndexIfMissing('referrals', 'status');
 
-        Schema::table('referral_earnings', function (Blueprint $table) {
-            $table->index('user_id');
-        });
+        // referral_earnings indexes
+        $this->addIndexIfMissing('referral_earnings', 'user_id');
 
-        Schema::table('social_accounts', function (Blueprint $table) {
-            $table->unique(['provider', 'provider_id']);
-        });
+        // social_accounts unique constraint
+        $this->addIndexIfMissing('social_accounts', ['provider', 'provider_id'], true);
 
-        Schema::table('personal_access_tokens', function (Blueprint $table) {
-            $table->index('token');
-        });
+        // personal_access_tokens indexes
+        $this->addIndexIfMissing('personal_access_tokens', 'token');
 
-        Schema::table('admin_users', function (Blueprint $table) {
-            $table->index('status');
-            $table->index('role');
-        });
+        // admin_users indexes
+        $this->addIndexIfMissing('admin_users', 'status');
+        $this->addIndexIfMissing('admin_users', 'role');
     }
 
     public function down(): void

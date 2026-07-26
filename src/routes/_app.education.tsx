@@ -1,4 +1,5 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { GraduationCap, Loader2 } from "lucide-react";
 import { useForm } from "react-hook-form";
@@ -21,6 +22,9 @@ import {
 import { educationSchema, type EducationInput } from "@/lib/validations";
 import { billsApi } from "@/lib/api";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/lib/auth";
+import { PinVerifyDialog } from "@/components/PinVerifyDialog";
+import { updateWalletBalance } from "@/lib/queries";
 
 const providers = [
   { name: "WAEC", value: "waec", color: "#111827" },
@@ -36,6 +40,11 @@ export const Route = createFileRoute("/_app/education")({
 
 function EducationPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [pinDialogOpen, setPinDialogOpen] = useState(false);
+  const [pendingValues, setPendingValues] = useState<EducationInput | null>(null);
+  const { hasPin } = useAuth();
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
 
   const form = useForm<EducationInput>({
     resolver: zodResolver(educationSchema),
@@ -43,15 +52,27 @@ function EducationPage() {
   });
 
   async function onSubmit(values: EducationInput) {
+    if (!hasPin) {
+      navigate({ to: "/setup-pin" });
+      return;
+    }
+    setPendingValues(values);
+    setPinDialogOpen(true);
+  }
+
+  async function executeEducation(pin: string) {
+    if (!pendingValues) return;
     setIsSubmitting(true);
     try {
-      await billsApi.buyEducationPin({
-        candidate_name: values.candidate_name,
-        quantity: values.quantity,
-        provider: values.provider,
-      });
+      const result = await billsApi.buyEducationPin({
+        candidate_name: pendingValues.candidate_name,
+        quantity: pendingValues.quantity,
+        provider: pendingValues.provider,
+      }, pin);
       toast.success("Education PIN purchased successfully!");
+      updateWalletBalance(queryClient, result?.new_balance);
       form.reset();
+      setPendingValues(null);
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Something went wrong";
       toast.error(message);
@@ -196,6 +217,11 @@ function EducationPage() {
           </Card>
         </motion.div>
       </div>
+      <PinVerifyDialog
+        open={pinDialogOpen}
+        onOpenChange={setPinDialogOpen}
+        onVerified={(pin) => executeEducation(pin)}
+      />
     </div>
   );
 }

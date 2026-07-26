@@ -21,6 +21,13 @@ export interface User {
   created_at: string;
 }
 
+export interface LoginResponse {
+  user: User;
+  token: string;
+  is_admin?: boolean;
+  has_pin?: boolean;
+}
+
 export interface Wallet {
   id: number;
   balance: number;
@@ -120,7 +127,7 @@ export interface BankAccount {
   created_at: string;
 }
 
-class ApiError extends Error {
+export class ApiError extends Error {
   status: number;
   errors?: Record<string, string[]>;
 
@@ -156,7 +163,6 @@ export async function apiFetch<T>(path: string, options: RequestInit = {}): Prom
     const message = body?.message || "Unauthorized";
     if (token) {
       localStorage.removeItem(TOKEN_KEY);
-      window.location.href = "/login";
     }
     throw new ApiError(message, 401);
   }
@@ -174,15 +180,10 @@ export async function apiFetch<T>(path: string, options: RequestInit = {}): Prom
   return data as T;
 }
 
-interface LoginResponse {
-  user: User;
-  token: string;
-  is_admin?: boolean;
-}
-
 interface RegisterResponse {
   user: User;
   token: string;
+  has_pin?: boolean;
 }
 
 interface TransactionListParams {
@@ -208,6 +209,7 @@ interface FundAmountResponse {
 interface BillResponse {
   message: string;
   reference: string;
+  new_balance?: number;
   [key: string]: unknown;
 }
 
@@ -224,6 +226,7 @@ interface BankAccountStoreResponse {
 interface TransferResponse {
   message: string;
   transaction: Transaction;
+  new_balance?: number;
 }
 
 interface NotificationCountResponse {
@@ -436,17 +439,23 @@ export interface VariationsResponse {
 }
 
 export const billsApi = {
-  buyAirtime(data: { phone: string; amount: number; provider: string }) {
+  buyAirtime(data: { phone: string; amount: number; provider: string }, pin?: string) {
+    const headers: Record<string, string> = {};
+    if (pin) headers["X-Transaction-Pin"] = pin;
     return apiFetch<BillResponse>("/bills/airtime", {
       method: "POST",
       body: JSON.stringify(data),
+      headers,
     });
   },
 
-  buyData(data: { phone: string; plan: string; amount: number; provider: string }) {
+  buyData(data: { phone: string; plan: string; amount: number; provider: string }, pin?: string) {
+    const headers: Record<string, string> = {};
+    if (pin) headers["X-Transaction-Pin"] = pin;
     return apiFetch<BillResponse>("/bills/data", {
       method: "POST",
       body: JSON.stringify(data),
+      headers,
     });
   },
 
@@ -455,10 +464,13 @@ export const billsApi = {
     amount: number;
     provider: string;
     meter_type: string;
-  }) {
+  }, pin?: string) {
+    const headers: Record<string, string> = {};
+    if (pin) headers["X-Transaction-Pin"] = pin;
     return apiFetch<BillResponse>("/bills/electricity", {
       method: "POST",
       body: JSON.stringify(data),
+      headers,
     });
   },
 
@@ -469,38 +481,53 @@ export const billsApi = {
     });
   },
 
-  subscribeCable(data: { smartcard: string; package: string; provider: string }) {
+  subscribeCable(data: { smartcard: string; package: string; provider: string }, pin?: string) {
+    const headers: Record<string, string> = {};
+    if (pin) headers["X-Transaction-Pin"] = pin;
     return apiFetch<BillResponse>("/bills/cable-tv", {
       method: "POST",
       body: JSON.stringify(data),
+      headers,
     });
   },
 
-  subscribeInternet(data: { customer_id: string; plan: string; provider: string }) {
+  subscribeInternet(data: { customer_id: string; plan: string; provider: string }, pin?: string) {
+    const headers: Record<string, string> = {};
+    if (pin) headers["X-Transaction-Pin"] = pin;
     return apiFetch<BillResponse>("/bills/internet", {
       method: "POST",
       body: JSON.stringify(data),
+      headers,
     });
   },
 
-  buyEducationPin(data: { candidate_name: string; quantity: number; provider: string }) {
+  buyEducationPin(data: { candidate_name: string; quantity: number; provider: string }, pin?: string) {
+    const headers: Record<string, string> = {};
+    if (pin) headers["X-Transaction-Pin"] = pin;
     return apiFetch<BillResponse>("/bills/education", {
       method: "POST",
       body: JSON.stringify(data),
+      headers,
     });
   },
 
-  fundBetting(data: { user_id: string; amount: number; provider: string }) {
+  fundBetting(data: { user_id: string; amount: number; provider: string }, pin?: string) {
+    const headers: Record<string, string> = {};
+    if (pin) headers["X-Transaction-Pin"] = pin;
     return apiFetch<BillResponse>("/bills/betting", {
       method: "POST",
       body: JSON.stringify(data),
+      headers,
     });
   },
 
-  convertAirtime(data: { phone: string; amount: number; provider: string }) {
+  convertAirtime(data: { phone: string; amount: number; provider: string }, pin?: string) {
+    const headers: Record<string, string> = {};
+    if (pin) headers["X-Transaction-Pin"] = pin;
     return apiFetch<BillResponse>("/bills/airtime-to-cash", {
       method: "POST",
       body: JSON.stringify(data),
+      headers,
     });
   },
 
@@ -523,17 +550,94 @@ export const transferApi = {
     account_number: string;
     amount: number;
     narration?: string;
-  }) {
+  }, pin?: string) {
+    const headers: Record<string, string> = {};
+    if (pin) headers["X-Transaction-Pin"] = pin;
     return apiFetch<TransferResponse>("/transfers", {
       method: "POST",
       body: JSON.stringify(data),
+      headers,
     });
   },
 };
 
 export const withdrawApi = {
-  store(data: { bank_code: string; account_number: string; account_name: string; amount: number }) {
+  store(data: { bank_code: string; account_number: string; account_name: string; amount: number }, pin?: string) {
+    const headers: Record<string, string> = {};
+    if (pin) headers["X-Transaction-Pin"] = pin;
     return apiFetch<TransferResponse>("/withdrawals", {
+      method: "POST",
+      body: JSON.stringify(data),
+      headers,
+    });
+  },
+};
+
+export interface GiftCard {
+  id: number;
+  user_id: number;
+  transaction_id: number | null;
+  card_name: string;
+  card_number: string;
+  card_pin: string | null;
+  card_value: number;
+  exchange_rate: number;
+  naira_value: number;
+  status: string;
+  metadata: Record<string, unknown> | null;
+  created_at: string;
+}
+
+export const giftCardApi = {
+  list() {
+    return apiFetch<{ gift_cards: GiftCard[] }>("/gift-cards").then((res) => res.gift_cards);
+  },
+
+  store(data: {
+    card_name: string;
+    card_number: string;
+    card_pin?: string;
+    card_value: number;
+    exchange_rate: number;
+  }) {
+    return apiFetch<{ message: string; gift_card: GiftCard }>("/gift-cards", {
+      method: "POST",
+      body: JSON.stringify(data),
+    });
+  },
+
+  show(id: number) {
+    return apiFetch<{ gift_card: GiftCard }>(`/gift-cards/${id}`);
+  },
+};
+
+export const pinApi = {
+  set(data: { pin: string; pin_confirmation: string; current_pin?: string }) {
+    return apiFetch<{ message: string }>("/profile/pin", {
+      method: "POST",
+      body: JSON.stringify(data),
+    });
+  },
+
+  verify(pin: string) {
+    return apiFetch<{ message: string }>("/profile/pin/verify", {
+      method: "POST",
+      body: JSON.stringify({ pin }),
+    });
+  },
+
+  status() {
+    return apiFetch<{ has_pin: boolean; pin_set_at: string | null }>("/profile/pin/status");
+  },
+
+  requestReset() {
+    return apiFetch<{ message: string }>("/profile/pin/reset/request", {
+      method: "POST",
+    });
+  },
+
+  resetConfirm(data: { otp: string; pin: string; pin_confirmation: string }) {
+    return apiFetch<{ message: string }>("/profile/pin/reset/confirm", {
       method: "POST",
       body: JSON.stringify(data),
     });

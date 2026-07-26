@@ -15,9 +15,14 @@ return Application::configure(basePath: dirname(__DIR__))
         commands: __DIR__ . '/../routes/console.php',
     )
     ->withMiddleware(function (Middleware $middleware) {
+        $middleware->api(prepend: [
+            \App\Http\Middleware\RequestTiming::class,
+        ]);
+
         $middleware->alias([
             'admin' => \App\Http\Middleware\AdminOnly::class,
             'auth.token' => \App\Http\Middleware\ResolveTokenUser::class,
+            'verify.transaction_pin' => \App\Http\Middleware\VerifyTransactionPin::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

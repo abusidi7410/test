@@ -1,4 +1,5 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { ArrowDownToLine, Loader2 } from "lucide-react";
 import { useForm } from "react-hook-form";
@@ -27,6 +28,9 @@ import {
 import { withdrawSchema, type WithdrawInput } from "@/lib/validations";
 import { withdrawApi } from "@/lib/api";
 import { banks } from "@/lib/utils";
+import { useAuth } from "@/lib/auth";
+import { PinVerifyDialog } from "@/components/PinVerifyDialog";
+import { updateWalletBalance } from "@/lib/queries";
 
 export const Route = createFileRoute("/_app/withdraw")({
   head: () => ({ meta: [{ title: "Withdraw — TechHub" }] }),
@@ -35,6 +39,11 @@ export const Route = createFileRoute("/_app/withdraw")({
 
 function WithdrawPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [pinDialogOpen, setPinDialogOpen] = useState(false);
+  const [pendingValues, setPendingValues] = useState<WithdrawInput | null>(null);
+  const { hasPin } = useAuth();
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
 
   const form = useForm<WithdrawInput>({
     resolver: zodResolver(withdrawSchema),
@@ -42,16 +51,28 @@ function WithdrawPage() {
   });
 
   async function onSubmit(values: WithdrawInput) {
+    if (!hasPin) {
+      navigate({ to: "/setup-pin" });
+      return;
+    }
+    setPendingValues(values);
+    setPinDialogOpen(true);
+  }
+
+  async function executeWithdraw(pin: string) {
+    if (!pendingValues) return;
     setIsSubmitting(true);
     try {
-      await withdrawApi.store({
-        bank_code: values.bank_code,
-        account_number: values.account_number,
-        account_name: values.account_name,
-        amount: values.amount,
-      });
+      const result = await withdrawApi.store({
+        bank_code: pendingValues.bank_code,
+        account_number: pendingValues.account_number,
+        account_name: pendingValues.account_name,
+        amount: pendingValues.amount,
+      }, pin);
       toast.success("Withdrawal request submitted!");
+      updateWalletBalance(queryClient, result?.new_balance);
       form.reset();
+      setPendingValues(null);
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Something went wrong";
       toast.error(message);
@@ -202,6 +223,12 @@ function WithdrawPage() {
           </Card>
         </motion.div>
       </div>
+
+      <PinVerifyDialog
+        open={pinDialogOpen}
+        onOpenChange={setPinDialogOpen}
+        onVerified={(pin) => executeWithdraw(pin)}
+      />
     </div>
   );
 }

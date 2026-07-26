@@ -1,4 +1,5 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { Landmark, Loader2 } from "lucide-react";
 import { useForm } from "react-hook-form";
@@ -21,6 +22,9 @@ import {
 import { bettingSchema, type BettingInput } from "@/lib/validations";
 import { billsApi } from "@/lib/api";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/lib/auth";
+import { PinVerifyDialog } from "@/components/PinVerifyDialog";
+import { updateWalletBalance } from "@/lib/queries";
 
 const providers = [
   { name: "Bet9ja", value: "bet9ja", color: "#00A859" },
@@ -36,6 +40,11 @@ export const Route = createFileRoute("/_app/betting")({
 
 function BettingPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [pinDialogOpen, setPinDialogOpen] = useState(false);
+  const [pendingValues, setPendingValues] = useState<BettingInput | null>(null);
+  const { hasPin } = useAuth();
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
 
   const form = useForm<BettingInput>({
     resolver: zodResolver(bettingSchema),
@@ -43,15 +52,27 @@ function BettingPage() {
   });
 
   async function onSubmit(values: BettingInput) {
+    if (!hasPin) {
+      navigate({ to: "/setup-pin" });
+      return;
+    }
+    setPendingValues(values);
+    setPinDialogOpen(true);
+  }
+
+  async function executeBetting(pin: string) {
+    if (!pendingValues) return;
     setIsSubmitting(true);
     try {
-      await billsApi.fundBetting({
-        user_id: values.user_id,
-        amount: values.amount,
-        provider: values.provider,
-      });
+      const result = await billsApi.fundBetting({
+        user_id: pendingValues.user_id,
+        amount: pendingValues.amount,
+        provider: pendingValues.provider,
+      }, pin);
       toast.success("Betting account funded successfully!");
+      updateWalletBalance(queryClient, result?.new_balance);
       form.reset();
+      setPendingValues(null);
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Something went wrong";
       toast.error(message);
@@ -196,6 +217,11 @@ function BettingPage() {
           </Card>
         </motion.div>
       </div>
+      <PinVerifyDialog
+        open={pinDialogOpen}
+        onOpenChange={setPinDialogOpen}
+        onVerified={(pin) => executeBetting(pin)}
+      />
     </div>
   );
 }

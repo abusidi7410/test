@@ -11,6 +11,7 @@ use App\Services\PaystackService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
 class WalletController extends Controller
@@ -81,7 +82,14 @@ class WalletController extends Controller
         // Build the callback URL for Paystack redirect (frontend return page)
         // Use ?: (elvis) not ?? — empty string from env is falsy but not null
         $callbackUrl = config('services.paystack.callback_url')
-            ?: config('frontend.url', 'http://localhost:8080') . '/payment/success';
+            ?: config('frontend.url', 'http://localhost:5173') . '/payment/success';
+
+        Log::info('Wallet fund: initializing Paystack payment', [
+            'user_id' => $user->id,
+            'amount' => $validated['amount'],
+            'reference' => $reference,
+            'callback_url' => $callbackUrl,
+        ]);
 
         // Initialize the transaction on Paystack's server via their API
         $paystackService = app(PaystackService::class);
@@ -97,8 +105,20 @@ class WalletController extends Controller
         );
 
         if (!$paystackData) {
+            Log::error('Wallet fund: Paystack initialization failed', [
+                'user_id' => $user->id,
+                'amount' => $validated['amount'],
+                'reference' => $reference,
+            ]);
+
             return $this->errorResponse('Failed to initialize payment. Please try again.', 500);
         }
+
+        Log::info('Wallet fund: Paystack initialization successful', [
+            'user_id' => $user->id,
+            'reference' => $reference,
+            'authorization_url' => $paystackData['authorization_url'] ?? null,
+        ]);
 
         // Create a pending transaction record inside a DB transaction
         DB::transaction(function () use ($user, $validated, $reference, $paystackData) {

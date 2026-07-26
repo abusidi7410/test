@@ -1,11 +1,11 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { Globe, Loader2 } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -29,6 +29,9 @@ import {
 import { internetSchema, type InternetInput } from "@/lib/validations";
 import { billsApi, variationsApi, type Variation } from "@/lib/api";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/lib/auth";
+import { PinVerifyDialog } from "@/components/PinVerifyDialog";
+import { updateWalletBalance } from "@/lib/queries";
 
 const providers = [
   { name: "Spectranet", value: "spectranet", color: "#E4002B" },
@@ -44,6 +47,11 @@ export const Route = createFileRoute("/_app/internet")({
 
 function InternetPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [pinDialogOpen, setPinDialogOpen] = useState(false);
+  const [pendingValues, setPendingValues] = useState<InternetInput | null>(null);
+  const { hasPin } = useAuth();
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
 
   const form = useForm<InternetInput>({
     resolver: zodResolver(internetSchema),
@@ -63,20 +71,33 @@ function InternetPage() {
   const plans: Variation[] = variationsResponse?.data?.variations ?? [];
 
   async function onSubmit(values: InternetInput) {
+    if (!hasPin) {
+      navigate({ to: "/setup-pin" });
+      return;
+    }
+    setPendingValues(values);
+    setPinDialogOpen(true);
+  }
+
+  async function executeInternet(pin: string) {
+    if (!pendingValues) return;
     setIsSubmitting(true);
     try {
-      await billsApi.subscribeInternet({
-        customer_id: values.customer_id,
-        plan: values.plan,
-        provider: values.provider,
-      });
+      const result = await billsApi.subscribeInternet({
+        customer_id: pendingValues.customer_id,
+        plan: pendingValues.plan,
+        provider: pendingValues.provider,
+      }, pin);
       toast.success("Internet subscription successful!");
+      updateWalletBalance(queryClient, result?.new_balance);
       form.reset();
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Something went wrong";
       toast.error(message);
     } finally {
       setIsSubmitting(false);
+      setPinDialogOpen(false);
+      setPendingValues(null);
     }
   }
 
@@ -230,6 +251,11 @@ function InternetPage() {
           </Card>
         </motion.div>
       </div>
+      <PinVerifyDialog
+        open={pinDialogOpen}
+        onOpenChange={setPinDialogOpen}
+        onVerified={(pin) => executeInternet(pin)}
+      />
     </div>
   );
 }

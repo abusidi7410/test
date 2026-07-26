@@ -9,6 +9,8 @@ use App\Models\BillPayment;
 use App\Models\Notification;
 use App\Models\Transaction;
 use App\Models\User;
+use App\Models\WalletHistory;
+use App\Models\AuditLog;
 use App\Services\Providers\ProviderRegistry;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -35,10 +37,6 @@ class BillPaymentController extends Controller
         $amount = (float) ($validated['amount'] ?? 0);
         $totalDebit = $charge !== null ? $amount + $charge : $amount;
 
-        if ($user->wallet->available_balance < $totalDebit) {
-            return $this->errorResponse('Insufficient wallet balance.', 422);
-        }
-
         $transaction = null;
 
         try {
@@ -51,14 +49,21 @@ class BillPaymentController extends Controller
                 $charge,
                 $description,
                 $totalDebit,
+                $request,
             ) {
-                $previousBalance = $user->wallet->available_balance;
+                $wallet = $user->wallet()->lockForUpdate()->first();
+
+                if (!$wallet || $wallet->available_balance < $totalDebit) {
+                    return 'insufficient';
+                }
+
+                $previousBalance = (float) $wallet->available_balance;
                 $currentBalance = $previousBalance - $totalDebit;
                 $reference = 'TH-' . Str::random(12);
 
                 $transaction = Transaction::create([
                     'user_id' => $user->id,
-                    'wallet_id' => $user->wallet->id,
+                    'wallet_id' => $wallet->id,
                     'category' => $category,
                     'type' => 'debit',
                     'amount' => $amount,
@@ -69,6 +74,8 @@ class BillPaymentController extends Controller
                     'description' => $description,
                     'reference' => $reference,
                     'metadata' => $validated,
+                    'ip_address' => $request->ip(),
+                    'user_agent' => $request->userAgent(),
                 ]);
 
                 $billData = [
@@ -84,10 +91,36 @@ class BillPaymentController extends Controller
 
                 $transaction->billPayment()->create($billData);
 
-                $user->wallet->decrement('available_balance', $totalDebit);
+                $wallet->decrement('available_balance', $totalDebit);
+
+                WalletHistory::create([
+                    'wallet_id' => $wallet->id,
+                    'user_id' => $user->id,
+                    'transaction_id' => $transaction->id,
+                    'type' => 'debit',
+                    'amount' => $totalDebit,
+                    'balance_before' => $previousBalance,
+                    'balance_after' => $currentBalance,
+                    'description' => $description,
+                    'reference' => $reference,
+                ]);
+
+                AuditLog::create([
+                    'user_id' => $user->id,
+                    'event' => 'wallet_debited',
+                    'auditable_type' => Transaction::class,
+                    'auditable_id' => $transaction->id,
+                    'description' => $description,
+                    'old_values' => ['balance' => $previousBalance],
+                    'new_values' => ['balance' => $currentBalance],
+                ]);
 
                 return $transaction;
             });
+
+            if ($transaction === 'insufficient') {
+                return $this->errorResponse('Insufficient wallet balance.', 422);
+            }
 
             /** @var Transaction $transaction */
             $adapterOperation = $buildAdapterOperation($validated);
@@ -124,6 +157,7 @@ class BillPaymentController extends Controller
                     'reference' => $transaction->reference,
                     'provider' => $result['provider']?->name,
                     'vtpass_response' => $result['response'],
+                    'new_balance' => (float) $transaction->fresh()->current_balance,
                 ], $description . ' is being processed.', 202);
             } elseif ($result['success']) {
                 $transaction->update([
@@ -156,6 +190,7 @@ class BillPaymentController extends Controller
                     'reference' => $transaction->reference,
                     'provider' => $result['provider']?->name,
                     'vtpass_response' => $result['response'],
+                    'new_balance' => (float) $transaction->fresh()->current_balance,
                 ], $description . ' successful.', 201);
             } else {
                 $errorMsg = $result['message'] ?? 'Unknown error';
@@ -286,10 +321,6 @@ class BillPaymentController extends Controller
         $charge = 0.00;
         $totalDebit = $amount + $charge;
 
-        if ($user->wallet->available_balance < $totalDebit) {
-            return $this->errorResponse('Insufficient wallet balance.', 422);
-        }
-
         $serviceMap = [
             'ikeja' => 'ikeja-electric',
             'ibadan' => 'ibadan-electric',
@@ -311,13 +342,19 @@ class BillPaymentController extends Controller
                 $charge,
                 $totalDebit,
             ) {
-                $previousBalance = $user->wallet->available_balance;
+                $wallet = $user->wallet()->lockForUpdate()->first();
+
+                if (!$wallet || $wallet->available_balance < $totalDebit) {
+                    return 'insufficient';
+                }
+
+                $previousBalance = (float) $wallet->available_balance;
                 $currentBalance = $previousBalance - $totalDebit;
                 $reference = 'TH-' . Str::random(12);
 
                 $transaction = Transaction::create([
                     'user_id' => $user->id,
-                    'wallet_id' => $user->wallet->id,
+                    'wallet_id' => $wallet->id,
                     'category' => 'electricity',
                     'type' => 'debit',
                     'amount' => $amount,
@@ -339,10 +376,14 @@ class BillPaymentController extends Controller
                     'quantity' => 1,
                 ]);
 
-                $user->wallet->decrement('available_balance', $totalDebit);
+                $wallet->decrement('available_balance', $totalDebit);
 
                 return $transaction;
             });
+
+            if ($transaction === 'insufficient') {
+                return $this->errorResponse('Insufficient wallet balance.', 422);
+            }
 
             /** @var Transaction $transaction */
             $registry = app(ProviderRegistry::class);
@@ -400,6 +441,7 @@ class BillPaymentController extends Controller
                     'token' => $token,
                     'access_token' => $accessToken,
                     'provider' => $result['provider']?->name,
+                    'new_balance' => (float) $transaction->fresh()->current_balance,
                 ], 'Electricity payment successful.', 201);
             } elseif ($result['success'] && isset($result['pending'])) {
                 $billPayment->update([
@@ -412,6 +454,7 @@ class BillPaymentController extends Controller
                     'amount' => number_format($amount, 2),
                     'reference' => $transaction->reference,
                     'provider' => $result['provider']?->name,
+                    'new_balance' => (float) $transaction->fresh()->current_balance,
                 ], 'Electricity payment is being processed.', 202);
             } else {
                 $errorMsg = $result['message'] ?? 'Unknown error';
@@ -617,6 +660,7 @@ class BillPaymentController extends Controller
             'transaction' => $transaction->fresh(['billPayment']),
             'amount' => number_format($amount, 2),
             'reference' => $transaction->reference,
+            'new_balance' => (float) $transaction->fresh()->current_balance,
         ], 'Airtime to cash conversion successful.', 201);
     }
 
@@ -736,6 +780,7 @@ class BillPaymentController extends Controller
                 return $this->successResponse([
                     'transaction' => $transaction->fresh(['billPayment']),
                     'status' => 'successful',
+                    'new_balance' => (float) $transaction->fresh()->current_balance,
                 ], 'Transaction is successful.');
             } elseif ($result['success'] && isset($result['pending'])) {
                 return $this->successResponse([

@@ -17,7 +17,8 @@ class AdminTransactionController extends Controller
 {
     public function index(Request $request): JsonResponse
     {
-        $query = Transaction::with('user');
+        $query = Transaction::with('user:id,first_name,last_name,email')
+            ->select(['id', 'uuid', 'reference', 'user_id', 'type', 'category', 'amount', 'charge', 'fees', 'status', 'description', 'gateway', 'currency', 'created_at']);
 
         if ($request->filled('search')) {
             $search = $request->input('search');

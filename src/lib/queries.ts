@@ -1,4 +1,4 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient, keepPreviousData, type QueryClient } from "@tanstack/react-query";
 import {
   authApi,
   walletApi,
@@ -9,7 +9,7 @@ import {
   settingsApi,
   bankAccountApi,
 } from "./api";
-import type { AppSettings } from "./api";
+import type { AppSettings, Wallet } from "./api";
 
 export function useCurrentUser() {
   return useQuery({
@@ -23,9 +23,21 @@ export function useWallet() {
   return useQuery({
     queryKey: ["wallet"],
     queryFn: () => walletApi.show(),
-    refetchOnMount: "always",
+    staleTime: 0,
     refetchOnWindowFocus: true,
+    refetchOnMount: true,
   });
+}
+
+export function updateWalletBalance(queryClient: QueryClient, newBalance?: number) {
+  if (newBalance !== undefined) {
+    queryClient.setQueryData<Wallet>(["wallet"], (old) => {
+      if (!old) return old;
+      return { ...old, balance: newBalance };
+    });
+  }
+  queryClient.invalidateQueries({ queryKey: ["wallet"] });
+  queryClient.invalidateQueries({ queryKey: ["transactions"] });
 }
 
 export function useTransactions(params?: {
@@ -38,8 +50,8 @@ export function useTransactions(params?: {
   return useQuery({
     queryKey: ["transactions", params],
     queryFn: () => transactionApi.list(params),
-    refetchOnMount: "always",
-    refetchOnWindowFocus: true,
+    staleTime: 30_000,
+    placeholderData: keepPreviousData,
   });
 }
 
@@ -47,8 +59,8 @@ export function useSpendingSummary() {
   return useQuery({
     queryKey: ["spendingSummary"],
     queryFn: () => transactionApi.spendingSummary(),
-    refetchOnMount: "always",
-    refetchOnWindowFocus: true,
+    staleTime: 60_000,
+    refetchOnWindowFocus: false,
   });
 }
 
@@ -56,8 +68,8 @@ export function useNotifications() {
   return useQuery({
     queryKey: ["notifications"],
     queryFn: () => notificationApi.list(),
-    refetchOnMount: "always",
-    refetchOnWindowFocus: true,
+    staleTime: 30_000,
+    placeholderData: keepPreviousData,
   });
 }
 
@@ -65,7 +77,7 @@ export function useUnreadNotificationCount() {
   return useQuery({
     queryKey: ["notifications", "unreadCount"],
     queryFn: () => notificationApi.unreadCount(),
-    refetchOnMount: "always",
+    staleTime: 30_000,
     refetchOnWindowFocus: true,
   });
 }
@@ -84,6 +96,7 @@ export function useProfile() {
   return useQuery({
     queryKey: ["profile"],
     queryFn: () => profileApi.show(),
+    staleTime: 60_000,
   });
 }
 
@@ -102,6 +115,7 @@ export function useReferrals() {
   return useQuery({
     queryKey: ["referrals"],
     queryFn: () => referralApi.index(),
+    staleTime: 60_000,
   });
 }
 
@@ -109,6 +123,7 @@ export function useSettings() {
   return useQuery({
     queryKey: ["settings"],
     queryFn: () => settingsApi.show(),
+    staleTime: 300_000,
   });
 }
 
@@ -126,5 +141,6 @@ export function useBankAccounts() {
   return useQuery({
     queryKey: ["bankAccounts"],
     queryFn: () => bankAccountApi.list(),
+    staleTime: 60_000,
   });
 }

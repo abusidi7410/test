@@ -62,6 +62,7 @@ function AdminAdminsPage() {
   const { data, isLoading } = useQuery({
     queryKey: ["admin", "admins"],
     queryFn: () => adminAdmins.list(),
+    staleTime: 60_000,
   });
 
   const createMutation = useMutation({
@@ -91,7 +92,7 @@ function AdminAdminsPage() {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["admin", "admins"] }),
   });
 
-  const admins = data?.data ?? [];
+  const admins = data?.admins ?? [];
 
   return (
     <div>
@@ -145,7 +146,7 @@ function AdminAdminsPage() {
                         <TableCell>
                           <Badge variant="secondary" className="gap-1">
                             <Shield className="h-3 w-3" />
-                            Admin
+                            {a.role?.replace('_', ' ') ?? 'Admin'}
                           </Badge>
                         </TableCell>
                         <TableCell>
@@ -260,7 +261,7 @@ function AdminAdminsPage() {
           <DialogFooter>
             <Button variant="outline" onClick={() => setCreateOpen(false)}>Cancel</Button>
             <Button
-              disabled={createMutation.isPending || !form.email || !form.password}
+              disabled={createMutation.isPending || !form.email || !form.password || form.password !== form.password_confirmation}
               onClick={() => createMutation.mutate()}
             >
               {createMutation.isPending && <Loader2 className="mr-1 h-3 w-3 animate-spin" />}

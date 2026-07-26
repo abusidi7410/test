@@ -11,7 +11,7 @@ import {
   XCircle,
   Clock,
 } from "lucide-react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { useDebounce } from "@/hooks/use-debounce";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Card, CardContent } from "@/components/ui/card";
@@ -84,11 +84,14 @@ function AdminProvidersPage() {
         page,
         per_page: 15,
       }),
+    staleTime: 30_000,
+    placeholderData: keepPreviousData,
   });
 
   const { data: statsData } = useQuery({
     queryKey: ["admin", "providers", "statistics"],
     queryFn: () => adminProviders.globalStatistics(),
+    staleTime: 60_000,
   });
 
   const toggleStatusMutation = useMutation({

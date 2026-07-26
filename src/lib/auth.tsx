@@ -13,6 +13,7 @@ interface LoginResult {
 }
 
 interface AuthContextType extends AuthState {
+  hasPin: boolean;
   login: (email: string, password: string) => Promise<LoginResult>;
   register: (data: {
     first_name: string;
@@ -24,6 +25,7 @@ interface AuthContextType extends AuthState {
   }) => Promise<void>;
   logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
+  setHasPin: (value: boolean) => void;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -51,6 +53,7 @@ function setStoredToken(token: string | null) {
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(getStoredToken);
+  const [hasPin, setHasPin] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -62,13 +65,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     authApi
       .me()
-      .then(({ user }) => {
+      .then(({ user, has_pin }) => {
         setUser(user);
         setToken(storedToken);
+        if (has_pin !== undefined) {
+          setHasPin(has_pin);
+        }
       })
       .catch(() => {
-        setStoredToken(null);
-        setToken(null);
+        setToken(storedToken);
         setUser(null);
       })
       .finally(() => {
@@ -76,11 +81,35 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       });
   }, []);
 
+  useEffect(() => {
+    function handleStorageEvent(e: StorageEvent) {
+      if (e.key === TOKEN_KEY && !e.newValue) {
+        setToken(null);
+        setUser(null);
+      }
+    }
+
+    function handleTokenCleared() {
+      setToken(null);
+      setUser(null);
+    }
+
+    window.addEventListener("storage", handleStorageEvent);
+    window.addEventListener("auth:token-cleared", handleTokenCleared);
+    return () => {
+      window.removeEventListener("storage", handleStorageEvent);
+      window.removeEventListener("auth:token-cleared", handleTokenCleared);
+    };
+  }, []);
+
   const login = useCallback(async (email: string, password: string): Promise<LoginResult> => {
     const response = await authApi.login(email, password);
     setStoredToken(response.token);
     setToken(response.token);
     setUser(response.user);
+    if (response.has_pin !== undefined) {
+      setHasPin(response.has_pin);
+    }
     return { is_admin: response.is_admin };
   }, []);
 
@@ -96,6 +125,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setStoredToken(response.token);
     setToken(response.token);
     setUser(response.user);
+    if (response.has_pin !== undefined) {
+      setHasPin(response.has_pin);
+    }
   }, []);
 
   const logout = useCallback(async () => {
@@ -107,6 +139,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setStoredToken(null);
     setToken(null);
     setUser(null);
+    setHasPin(false);
   }, []);
 
   const refreshUser = useCallback(async () => {
@@ -115,8 +148,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const value = useMemo(
-    () => ({ user, token, isLoading, login, register, logout, refreshUser }),
-    [user, token, isLoading, login, register, logout, refreshUser]
+    () => ({ user, token, isLoading, hasPin, login, register, logout, refreshUser, setHasPin }),
+    [user, token, isLoading, hasPin, login, register, logout, refreshUser, setHasPin]
   );
 
   return (

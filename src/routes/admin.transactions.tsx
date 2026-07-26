@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { Search, Filter, MoreHorizontal, Loader2, CheckCircle, XCircle, RotateCcw, ArrowUpRight, ArrowDownRight } from "lucide-react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -66,6 +66,8 @@ function AdminTransactionsPage() {
         page,
         per_page: 15,
       }),
+    staleTime: 30_000,
+    placeholderData: keepPreviousData,
   });
 
   const approveMutation = useMutation({

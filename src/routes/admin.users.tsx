@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
-import { Search, Filter, MoreHorizontal, UserPlus } from "lucide-react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { Search, Filter, MoreHorizontal, UserPlus, Loader2 } from "lucide-react";
+import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -59,6 +59,8 @@ function AdminUsersPage() {
   const [actionType, setActionType] = useState<string>("");
   const [creditAmount, setCreditAmount] = useState("");
   const [creditNarration, setCreditNarration] = useState("");
+  const [addUserOpen, setAddUserOpen] = useState(false);
+  const [newUser, setNewUser] = useState({ first_name: "", last_name: "", email: "", phone: "", password: "", password_confirmation: "" });
 
   const { data, isLoading, isError, error } = useQuery({
     queryKey: ["admin", "users", { search: debouncedSearch, status, page }],
@@ -69,6 +71,8 @@ function AdminUsersPage() {
         page,
         per_page: 15,
       }),
+    staleTime: 30_000,
+    placeholderData: keepPreviousData,
   });
 
   const suspendMutation = useMutation({
@@ -117,6 +121,22 @@ function AdminUsersPage() {
     },
   });
 
+  const createUserMutation = useMutation({
+    mutationFn: () => adminUsers.create({
+      first_name: newUser.first_name,
+      last_name: newUser.last_name,
+      email: newUser.email,
+      phone: newUser.phone || undefined,
+      password: newUser.password,
+      password_confirmation: newUser.password_confirmation,
+    }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin", "users"] });
+      setAddUserOpen(false);
+      setNewUser({ first_name: "", last_name: "", email: "", phone: "", password: "", password_confirmation: "" });
+    },
+  });
+
   const users = data?.items ?? [];
   const pagination = data?.pagination;
   const totalPages = pagination?.last_page ?? 1;
@@ -143,7 +163,7 @@ function AdminUsersPage() {
         title="Users"
         description="Manage all platform users."
         actions={
-          <Button>
+          <Button onClick={() => setAddUserOpen(true)}>
             <UserPlus className="mr-2 h-4 w-4" />
             Add User
           </Button>
@@ -232,7 +252,7 @@ function AdminUsersPage() {
                           {u.phone ?? "—"}
                         </TableCell>
                         <TableCell className="font-semibold tabular-nums">
-                          {formatNaira(u.wallet?.balance ?? 0)}
+                          {formatNaira(u.wallet?.available_balance ?? 0)}
                         </TableCell>
                         <TableCell>
                           <Badge
@@ -395,6 +415,53 @@ function AdminUsersPage() {
               onClick={() => handleAction(actionType)}
             >
               Confirm
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={addUserOpen} onOpenChange={setAddUserOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Add User</DialogTitle>
+            <DialogDescription>Create a new user account.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>First Name</Label>
+                <Input value={newUser.first_name} onChange={(e) => setNewUser((u) => ({ ...u, first_name: e.target.value }))} />
+              </div>
+              <div className="space-y-2">
+                <Label>Last Name</Label>
+                <Input value={newUser.last_name} onChange={(e) => setNewUser((u) => ({ ...u, last_name: e.target.value }))} />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label>Email</Label>
+              <Input type="email" value={newUser.email} onChange={(e) => setNewUser((u) => ({ ...u, email: e.target.value }))} />
+            </div>
+            <div className="space-y-2">
+              <Label>Phone (optional)</Label>
+              <Input type="tel" value={newUser.phone} onChange={(e) => setNewUser((u) => ({ ...u, phone: e.target.value }))} />
+            </div>
+            <div className="space-y-2">
+              <Label>Password</Label>
+              <Input type="password" value={newUser.password} onChange={(e) => setNewUser((u) => ({ ...u, password: e.target.value }))} />
+            </div>
+            <div className="space-y-2">
+              <Label>Confirm Password</Label>
+              <Input type="password" value={newUser.password_confirmation} onChange={(e) => setNewUser((u) => ({ ...u, password_confirmation: e.target.value }))} />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setAddUserOpen(false)}>Cancel</Button>
+            <Button
+              disabled={createUserMutation.isPending || !newUser.email || !newUser.password || newUser.password !== newUser.password_confirmation}
+              onClick={() => createUserMutation.mutate()}
+            >
+              {createUserMutation.isPending && <Loader2 className="mr-1 h-3 w-3 animate-spin" />}
+              Create User
             </Button>
           </DialogFooter>
         </DialogContent>

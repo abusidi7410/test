@@ -1,11 +1,11 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { Wifi, Loader2 } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -29,6 +29,9 @@ import {
 import { dataSchema, type DataInput } from "@/lib/validations";
 import { billsApi, variationsApi, type Variation } from "@/lib/api";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/lib/auth";
+import { PinVerifyDialog } from "@/components/PinVerifyDialog";
+import { updateWalletBalance } from "@/lib/queries";
 
 const providers = [
   { name: "MTN", value: "mtn", vtpassServiceId: "mtn-data", color: "#FFCC00" },
@@ -44,6 +47,11 @@ export const Route = createFileRoute("/_app/data")({
 
 function DataPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [pinDialogOpen, setPinDialogOpen] = useState(false);
+  const [pendingValues, setPendingValues] = useState<DataInput | null>(null);
+  const { hasPin } = useAuth();
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
 
   const form = useForm<DataInput>({
     resolver: zodResolver(dataSchema),
@@ -80,16 +88,28 @@ function DataPage() {
   }
 
   async function onSubmit(values: DataInput) {
+    if (!hasPin) {
+      navigate({ to: "/setup-pin" });
+      return;
+    }
+    setPendingValues(values);
+    setPinDialogOpen(true);
+  }
+
+  async function executeData(pin: string) {
+    if (!pendingValues) return;
     setIsSubmitting(true);
     try {
-      await billsApi.buyData({
-        phone: values.phone,
-        plan: values.plan,
-        amount: values.amount ?? 0,
-        provider: values.provider,
-      });
+      const result = await billsApi.buyData({
+        phone: pendingValues.phone,
+        plan: pendingValues.plan,
+        amount: pendingValues.amount ?? 0,
+        provider: pendingValues.provider,
+      }, pin);
       toast.success("Data purchased successfully!");
+      updateWalletBalance(queryClient, result?.new_balance);
       form.reset();
+      setPendingValues(null);
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Something went wrong";
       toast.error(message);
@@ -270,6 +290,12 @@ function DataPage() {
           </Card>
         </motion.div>
       </div>
+
+      <PinVerifyDialog
+        open={pinDialogOpen}
+        onOpenChange={setPinDialogOpen}
+        onVerified={(pin) => executeData(pin)}
+      />
     </div>
   );
 }

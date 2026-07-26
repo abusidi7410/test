@@ -108,20 +108,6 @@ class PaystackWebhookController extends Controller
             return response()->json(['success' => true, 'message' => 'No reference.']);
         }
 
-        // ── Duplicate guard ──
-        // If we already have a successful transaction with this reference,
-        // return 200 immediately without re-crediting the wallet.
-        $existingTransaction = Transaction::where('reference', $reference)->first();
-
-        if ($existingTransaction && $existingTransaction->status === TransactionStatus::SUCCESSFUL) {
-            Log::info('Paystack webhook charge.success: duplicate, already processed', [
-                'reference' => $reference,
-                'transaction_id' => $existingTransaction->id,
-            ]);
-
-            return response()->json(['success' => true, 'message' => 'Transaction already processed.']);
-        }
-
         // ── Server-side verification ──
         // Never trust the webhook payload alone. Verify the transaction
         // directly with Paystack's API to confirm the amount and status.
@@ -147,17 +133,38 @@ class PaystackWebhookController extends Controller
 
         // ── Process the credit inside a database transaction ──
         try {
-            DB::transaction(function () use ($existingTransaction, $verifiedData, $reference, $request) {
+            DB::transaction(function () use ($verifiedData, $reference, $request) {
                 // Determine the amount in Naira (Paystack sends in kobo)
                 $amountInNaira = (float) ($verifiedData['amount'] ?? 0) / 100;
                 $fees = (float) ($verifiedData['fees'] ?? 0) / 100;
 
-                if ($existingTransaction) {
-                    // Update the existing pending transaction
-                    $transaction = $existingTransaction;
-                    $previousBalance = $transaction->current_balance;
+                // Find existing transaction (may have been created by the verify endpoint)
+                $existingTransaction = Transaction::where('reference', $reference)->first();
 
-                    $transaction->update([
+                // Idempotent re-check inside the lock — the verify endpoint may
+                // have already processed this transaction while we were verifying
+                // with Paystack or waiting for the lock.
+                if ($existingTransaction && $existingTransaction->status === TransactionStatus::SUCCESSFUL) {
+                    Log::info('Paystack webhook charge.success: duplicate, already processed', [
+                        'reference' => $reference,
+                        'transaction_id' => $existingTransaction->id,
+                    ]);
+
+                    return;
+                }
+
+                if ($existingTransaction) {
+                    // Lock the wallet row to prevent race condition with verify endpoint
+                    $wallet = $existingTransaction->wallet()->lockForUpdate()->first();
+                    $previousBalance = (float) $wallet->available_balance;
+
+                    // Re-check idempotency after acquiring lock
+                    $existingTransaction->refresh();
+                    if ($existingTransaction->status === TransactionStatus::SUCCESSFUL) {
+                        return;
+                    }
+
+                    $existingTransaction->update([
                         'status' => TransactionStatus::SUCCESSFUL,
                         'fees' => $fees,
                         'provider_reference' => $verifiedData['id'] ?? null,
@@ -170,15 +177,18 @@ class PaystackWebhookController extends Controller
                         'current_balance' => $previousBalance + $amountInNaira,
                         'webhook_payload' => $request->all(),
                         'metadata' => array_merge(
-                            $transaction->metadata ?? [],
+                            $existingTransaction->metadata ?? [],
                             ['paystack_verification' => $verifiedData]
                         ),
                     ]);
+
+                    $transaction = $existingTransaction;
                 } else {
                     // No existing transaction found — create a new one.
                     // This handles edge cases where the init record was lost.
                     $wallet = \App\Models\Wallet::where('customer_email', $verifiedData['customer']['email'] ?? '')
                         ->orWhereHas('user', fn($q) => $q->where('email', $verifiedData['customer']['email'] ?? ''))
+                        ->lockForUpdate()
                         ->first();
 
                     if (!$wallet) {
@@ -216,12 +226,10 @@ class PaystackWebhookController extends Controller
                         'metadata' => ['paystack_verification' => $verifiedData],
                     ]);
 
-                    $wallet = $transaction->wallet;
+                    $previousBalance = (float) $wallet->available_balance;
                 }
 
                 // Credit the user's wallet
-                $wallet = $transaction->wallet;
-                $previousBalance = (float) $wallet->available_balance;
                 $wallet->increment('available_balance', $amountInNaira);
                 $newBalance = (float) $wallet->fresh()->available_balance;
 

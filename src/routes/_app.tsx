@@ -19,7 +19,7 @@ export const Route = createFileRoute("/_app")({
 });
 
 function AppLayout() {
-  const { isLoading } = useAuth();
+  const { isLoading, token, hasPin } = useAuth();
 
   if (isLoading) {
     return (
@@ -27,6 +27,10 @@ function AppLayout() {
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
+  }
+
+  if (!token) {
+    throw redirect({ to: "/login" });
   }
 
   return (

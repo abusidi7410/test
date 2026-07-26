@@ -30,7 +30,9 @@ import { Route as AppInternetRouteImport } from './routes/_app.internet'
 import { Route as AppNotificationsRouteImport } from './routes/_app.notifications'
 import { Route as AppProfileRouteImport } from './routes/_app.profile'
 import { Route as AppReferralsRouteImport } from './routes/_app.referrals'
+import { Route as AppResetPinRouteImport } from './routes/_app.reset-pin'
 import { Route as AppSettingsRouteImport } from './routes/_app.settings'
+import { Route as AppSetupPinRouteImport } from './routes/_app.setup-pin'
 import { Route as AppTransactionsRouteImport } from './routes/_app.transactions'
 import { Route as AppTransferRouteImport } from './routes/_app.transfer'
 import { Route as AppWalletRouteImport } from './routes/_app.wallet'
@@ -152,9 +154,19 @@ const AppReferralsRoute = AppReferralsRouteImport.update({
   path: '/referrals',
   getParentRoute: () => AppRoute,
 } as any)
+const AppResetPinRoute = AppResetPinRouteImport.update({
+  id: '/reset-pin',
+  path: '/reset-pin',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppSettingsRoute = AppSettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppSetupPinRoute = AppSetupPinRouteImport.update({
+  id: '/setup-pin',
+  path: '/setup-pin',
   getParentRoute: () => AppRoute,
 } as any)
 const AppTransactionsRoute = AppTransactionsRouteImport.update({
@@ -259,7 +271,9 @@ export interface FileRoutesByFullPath {
   '/notifications': typeof AppNotificationsRoute
   '/profile': typeof AppProfileRoute
   '/referrals': typeof AppReferralsRoute
+  '/reset-pin': typeof AppResetPinRoute
   '/settings': typeof AppSettingsRoute
+  '/setup-pin': typeof AppSetupPinRoute
   '/transactions': typeof AppTransactionsRoute
   '/transfer': typeof AppTransferRoute
   '/wallet': typeof AppWalletRoute
@@ -298,7 +312,9 @@ export interface FileRoutesByTo {
   '/notifications': typeof AppNotificationsRoute
   '/profile': typeof AppProfileRoute
   '/referrals': typeof AppReferralsRoute
+  '/reset-pin': typeof AppResetPinRoute
   '/settings': typeof AppSettingsRoute
+  '/setup-pin': typeof AppSetupPinRoute
   '/transactions': typeof AppTransactionsRoute
   '/transfer': typeof AppTransferRoute
   '/wallet': typeof AppWalletRoute
@@ -339,7 +355,9 @@ export interface FileRoutesById {
   '/_app/notifications': typeof AppNotificationsRoute
   '/_app/profile': typeof AppProfileRoute
   '/_app/referrals': typeof AppReferralsRoute
+  '/_app/reset-pin': typeof AppResetPinRoute
   '/_app/settings': typeof AppSettingsRoute
+  '/_app/setup-pin': typeof AppSetupPinRoute
   '/_app/transactions': typeof AppTransactionsRoute
   '/_app/transfer': typeof AppTransferRoute
   '/_app/wallet': typeof AppWalletRoute
@@ -380,7 +398,9 @@ export interface FileRouteTypes {
     | '/notifications'
     | '/profile'
     | '/referrals'
+    | '/reset-pin'
     | '/settings'
+    | '/setup-pin'
     | '/transactions'
     | '/transfer'
     | '/wallet'
@@ -419,7 +439,9 @@ export interface FileRouteTypes {
     | '/notifications'
     | '/profile'
     | '/referrals'
+    | '/reset-pin'
     | '/settings'
+    | '/setup-pin'
     | '/transactions'
     | '/transfer'
     | '/wallet'
@@ -459,7 +481,9 @@ export interface FileRouteTypes {
     | '/_app/notifications'
     | '/_app/profile'
     | '/_app/referrals'
+    | '/_app/reset-pin'
     | '/_app/settings'
+    | '/_app/setup-pin'
     | '/_app/transactions'
     | '/_app/transfer'
     | '/_app/wallet'
@@ -638,11 +662,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppReferralsRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/reset-pin': {
+      id: '/_app/reset-pin'
+      path: '/reset-pin'
+      fullPath: '/reset-pin'
+      preLoaderRoute: typeof AppResetPinRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/settings': {
       id: '/_app/settings'
       path: '/settings'
       fullPath: '/settings'
       preLoaderRoute: typeof AppSettingsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/setup-pin': {
+      id: '/_app/setup-pin'
+      path: '/setup-pin'
+      fullPath: '/setup-pin'
+      preLoaderRoute: typeof AppSetupPinRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/transactions': {
@@ -775,7 +813,9 @@ interface AppRouteChildren {
   AppNotificationsRoute: typeof AppNotificationsRoute
   AppProfileRoute: typeof AppProfileRoute
   AppReferralsRoute: typeof AppReferralsRoute
+  AppResetPinRoute: typeof AppResetPinRoute
   AppSettingsRoute: typeof AppSettingsRoute
+  AppSetupPinRoute: typeof AppSetupPinRoute
   AppTransactionsRoute: typeof AppTransactionsRoute
   AppTransferRoute: typeof AppTransferRoute
   AppWalletRoute: typeof AppWalletRoute
@@ -798,7 +838,9 @@ const AppRouteChildren: AppRouteChildren = {
   AppNotificationsRoute: AppNotificationsRoute,
   AppProfileRoute: AppProfileRoute,
   AppReferralsRoute: AppReferralsRoute,
+  AppResetPinRoute: AppResetPinRoute,
   AppSettingsRoute: AppSettingsRoute,
+  AppSetupPinRoute: AppSetupPinRoute,
   AppTransactionsRoute: AppTransactionsRoute,
   AppTransferRoute: AppTransferRoute,
   AppWalletRoute: AppWalletRoute,

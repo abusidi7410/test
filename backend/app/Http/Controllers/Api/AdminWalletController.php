@@ -18,7 +18,8 @@ class AdminWalletController extends Controller
 {
     public function index(Request $request): JsonResponse
     {
-        $query = Wallet::with('user');
+        $query = Wallet::with('user:id,first_name,last_name,email')
+            ->select(['id', 'user_id', 'available_balance', 'ledger_balance', 'cashback_balance', 'bonus_balance', 'is_locked', 'created_at']);
 
         if ($request->filled('search')) {
             $search = $request->input('search');

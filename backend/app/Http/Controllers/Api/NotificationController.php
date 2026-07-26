@@ -18,6 +18,7 @@ class NotificationController extends Controller
         $user = $request->user();
 
         $paginator = $user->notifications()
+            ->select(['id', 'title', 'description', 'type', 'data', 'read_at', 'created_at'])
             ->latest()
             ->paginate($request->input('per_page', 20));
 

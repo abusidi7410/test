@@ -21,7 +21,8 @@ class AdminUserController extends Controller
 {
     public function index(Request $request): JsonResponse
     {
-        $query = User::with('wallet');
+        $query = User::with('wallet:id,user_id,available_balance,ledger_balance,is_locked')
+            ->select(['id', 'first_name', 'last_name', 'email', 'phone', 'status', 'level', 'created_at']);
 
         if ($request->filled('search')) {
             $search = $request->input('search');
@@ -354,5 +355,20 @@ class AdminUserController extends Controller
         return $this->successResponse([
             'wallet' => $wallet->fresh(),
         ], 'Wallet unlocked successfully.');
+    }
+
+    public function transactions(Request $request, string $id): JsonResponse
+    {
+        $user = User::find($id);
+
+        if (!$user) {
+            return $this->errorResponse('User not found.', 404);
+        }
+
+        $transactions = $user->transactions()
+            ->latest()
+            ->paginate($request->input('per_page', 20));
+
+        return $this->paginatedResponse($transactions);
     }
 }

@@ -186,12 +186,12 @@ function AdminUserDetailPage() {
                   <div className="flex items-center justify-between rounded-lg border p-3">
                     <span className="text-sm text-muted-foreground">Balance</span>
                     <span className="font-semibold tabular-nums">
-                      {formatNaira(user.wallet?.balance ?? 0)}
+                      {formatNaira(user.wallet?.available_balance ?? 0)}
                     </span>
                   </div>
                   <div className="flex items-center justify-between rounded-lg border p-3">
                     <span className="text-sm text-muted-foreground">Status</span>
-                    <Badge variant="secondary">{user.wallet?.status ?? "active"}</Badge>
+                    <Badge variant="secondary">{user.wallet?.is_locked ? "Locked" : "Active"}</Badge>
                   </div>
                 </div>
                 <Separator />
@@ -237,7 +237,7 @@ function AdminUserDetailPage() {
                     </Button>
                   </div>
                   <div className="flex flex-wrap gap-2">
-                    {user.wallet?.status !== "locked" ? (
+                    {user.wallet?.is_locked ? (
                       <Button size="sm" variant="outline" disabled={lockMutation.isPending} onClick={() => lockMutation.mutate()}>
                         Lock Wallet
                       </Button>

@@ -20,6 +20,7 @@ use App\Http\Controllers\Api\ReferralController;
 use App\Http\Controllers\Api\SettingsController;
 use App\Http\Controllers\Api\SocialAuthController;
 use App\Http\Controllers\Api\TransactionController;
+use App\Http\Controllers\Api\TransactionPinController;
 use App\Http\Controllers\Api\TransferController;
 use App\Http\Controllers\Api\VariationController;
 use App\Http\Controllers\Api\PaymentController;
@@ -28,6 +29,7 @@ use App\Http\Controllers\Api\WalletController;
 use App\Http\Controllers\Api\WebhookController;
 use App\Http\Controllers\Api\WithdrawController;
 use App\Http\Controllers\Api\SupportTicketController;
+use App\Http\Controllers\Api\GiftCardController;
 use Illuminate\Support\Facades\Route;
 
 Route::post('/auth/register', [AuthController::class, 'register'])
@@ -60,6 +62,12 @@ Route::middleware('auth.token')->group(function () {
     Route::put('/profile/password', [ProfileController::class, 'changePassword']);
     Route::post('/profile/upgrade', [ProfileController::class, 'upgradeLevel']);
 
+    Route::post('/profile/pin', [TransactionPinController::class, 'store']);
+    Route::post('/profile/pin/verify', [TransactionPinController::class, 'verify']);
+    Route::get('/profile/pin/status', [TransactionPinController::class, 'status']);
+    Route::post('/profile/pin/reset/request', [TransactionPinController::class, 'requestReset']);
+    Route::post('/profile/pin/reset/confirm', [TransactionPinController::class, 'confirmReset']);
+
     Route::get('/wallet', [WalletController::class, 'show']);
     Route::post('/wallet/fund', [WalletController::class, 'fund']);
     Route::get('/payment/verify/{reference}', [PaymentController::class, 'verify']);
@@ -69,20 +77,22 @@ Route::middleware('auth.token')->group(function () {
     Route::get('/transactions/{uuid}', [TransactionController::class, 'show']);
     Route::post('/transactions/{reference}/requery', [BillPaymentController::class, 'requeryTransaction']);
 
-    Route::post('/bills/airtime', [BillPaymentController::class, 'buyAirtime']);
-    Route::post('/bills/data', [BillPaymentController::class, 'buyData']);
-    Route::post('/bills/electricity', [BillPaymentController::class, 'payElectricity']);
+    Route::middleware('verify.transaction_pin')->group(function () {
+        Route::post('/bills/airtime', [BillPaymentController::class, 'buyAirtime']);
+        Route::post('/bills/data', [BillPaymentController::class, 'buyData']);
+        Route::post('/bills/electricity', [BillPaymentController::class, 'payElectricity']);
+        Route::post('/bills/cable-tv', [BillPaymentController::class, 'subscribeCable']);
+        Route::post('/bills/internet', [BillPaymentController::class, 'subscribeInternet']);
+        Route::post('/bills/education', [BillPaymentController::class, 'buyEducationPin']);
+        Route::post('/bills/betting', [BillPaymentController::class, 'fundBetting']);
+        Route::post('/bills/airtime-to-cash', [BillPaymentController::class, 'convertAirtime']);
+
+        Route::post('/transfers', [TransferController::class, 'store']);
+        Route::post('/withdrawals', [WithdrawController::class, 'store']);
+    });
+
     Route::post('/bills/verify-meter', [BillPaymentController::class, 'verifyMeter']);
-    Route::post('/bills/cable-tv', [BillPaymentController::class, 'subscribeCable']);
-    Route::post('/bills/internet', [BillPaymentController::class, 'subscribeInternet']);
-    Route::post('/bills/education', [BillPaymentController::class, 'buyEducationPin']);
-    Route::post('/bills/betting', [BillPaymentController::class, 'fundBetting']);
-    Route::post('/bills/airtime-to-cash', [BillPaymentController::class, 'convertAirtime']);
-
     Route::get('/variations/{serviceId}', [VariationController::class, 'getVariations']);
-
-    Route::post('/transfers', [TransferController::class, 'store']);
-    Route::post('/withdrawals', [WithdrawController::class, 'store']);
 
     Route::get('/bank-accounts', [BankAccountController::class, 'index']);
     Route::post('/bank-accounts', [BankAccountController::class, 'store']);
@@ -99,6 +109,11 @@ Route::middleware('auth.token')->group(function () {
 
     Route::get('/settings', [SettingsController::class, 'show']);
     Route::put('/settings', [SettingsController::class, 'update']);
+
+    // Gift Cards
+    Route::get('/gift-cards', [GiftCardController::class, 'index']);
+    Route::post('/gift-cards', [GiftCardController::class, 'store']);
+    Route::get('/gift-cards/{id}', [GiftCardController::class, 'show']);
 
     // Support Tickets
     Route::get('/support', [SupportTicketController::class, 'index']);
@@ -127,6 +142,7 @@ Route::middleware('admin')->prefix('admin')->group(function () {
     Route::post('/users/{id}/debit', [AdminUserController::class, 'debit']);
     Route::post('/users/{id}/lock-wallet', [AdminUserController::class, 'lockWallet']);
     Route::post('/users/{id}/unlock-wallet', [AdminUserController::class, 'unlockWallet']);
+    Route::get('/users/{id}/transactions', [AdminUserController::class, 'transactions']);
 
     Route::get('/admins', [AdminController::class, 'index']);
     Route::post('/admins', [AdminController::class, 'store']);

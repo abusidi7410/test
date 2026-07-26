@@ -83,6 +83,7 @@ class AuthController extends Controller
         return $this->successResponse([
             'user' => $user->load('wallet'),
             'token' => $token,
+            'has_pin' => $user->hasTransactionPin(),
         ], 'Registration successful.', 201);
     }
 
@@ -111,6 +112,7 @@ class AuthController extends Controller
             return $this->successResponse([
                 'user' => $user->load('wallet'),
                 'token' => $token,
+                'has_pin' => $user->hasTransactionPin(),
             ], 'Login successful.');
         }
 
@@ -158,7 +160,10 @@ class AuthController extends Controller
 
         $user = $user->load('wallet');
 
-        return $this->successResponse(['user' => $user]);
+        return $this->successResponse([
+            'user' => $user,
+            'has_pin' => $user->hasTransactionPin(),
+        ]);
     }
 
     public function forgotPassword(Request $request): JsonResponse

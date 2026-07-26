@@ -5,7 +5,12 @@ return [
 
     'allowed_methods' => ['*'],
 
-    'allowed_origins' => [env('FRONTEND_URL', 'http://localhost:8080')],
+    'allowed_origins' => array_filter([
+        env('FRONTEND_URL', 'http://localhost:8080'),
+        env('APP_URL'),
+        'https://techub.pages.dev',
+        'https://techhub-api-production-dda3.up.railway.app',
+    ]),
 
     'allowed_origins_patterns' => [],
 

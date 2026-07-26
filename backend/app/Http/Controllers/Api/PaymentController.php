@@ -43,6 +43,11 @@ class PaymentController extends Controller
         /** @var User $user */
         $user = $request->user();
 
+        Log::info('Payment verify: incoming request', [
+            'reference' => $reference,
+            'user_id' => $user->id,
+        ]);
+
         $transaction = Transaction::where('reference', $reference)
             ->where('user_id', $user->id)
             ->first();
@@ -68,6 +73,11 @@ class PaymentController extends Controller
         }
 
         // ── Verify with Paystack API ──
+        Log::info('Payment verify: calling Paystack API', [
+            'reference' => $reference,
+            'current_status' => $transaction->status->value,
+        ]);
+
         $verifiedData = $this->paystack->verifyTransaction($reference);
 
         if (!$verifiedData) {
@@ -120,7 +130,16 @@ class PaymentController extends Controller
                 $reference,
                 $request,
             ) {
-                $wallet = $transaction->wallet;
+                // Lock the wallet row to prevent race condition with webhook
+                $wallet = $transaction->wallet()->lockForUpdate()->first();
+
+                // Re-check idempotency inside the lock — the webhook may have
+                // processed this transaction while we were waiting for the lock.
+                $transaction->refresh();
+                if ($transaction->status->value === 'successful') {
+                    return;
+                }
+
                 $previousBalance = (float) $wallet->available_balance;
 
                 // Update the transaction

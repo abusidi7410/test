@@ -1,4 +1,5 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { Zap, Loader2, CheckCircle, AlertCircle } from "lucide-react";
 import { useForm } from "react-hook-form";
@@ -28,6 +29,9 @@ import {
 import { electricitySchema, type ElectricityInput } from "@/lib/validations";
 import { billsApi, type MeterVerification } from "@/lib/api";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/lib/auth";
+import { PinVerifyDialog } from "@/components/PinVerifyDialog";
+import { updateWalletBalance } from "@/lib/queries";
 
 const providers = [
   { name: "Ikeja Electric", value: "ikeja", color: "#D32F2F" },
@@ -50,6 +54,11 @@ function ElectricityPage() {
   const [isVerifying, setIsVerifying] = useState(false);
   const [meterInfo, setMeterInfo] = useState<MeterVerification | null>(null);
   const [verified, setVerified] = useState(false);
+  const [pinDialogOpen, setPinDialogOpen] = useState(false);
+  const [pendingValues, setPendingValues] = useState<ElectricityInput | null>(null);
+  const { hasPin } = useAuth();
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
 
   const form = useForm<ElectricityInput>({
     resolver: zodResolver(electricitySchema),
@@ -94,18 +103,30 @@ function ElectricityPage() {
   }
 
   async function onSubmit(values: ElectricityInput) {
+    if (!hasPin) {
+      navigate({ to: "/setup-pin" });
+      return;
+    }
+    setPendingValues(values);
+    setPinDialogOpen(true);
+  }
+
+  async function executeElectricity(pin: string) {
+    if (!pendingValues) return;
     setIsSubmitting(true);
     try {
-      await billsApi.payElectricity({
-        meter_number: values.meter_number,
-        amount: values.amount,
-        provider: values.provider,
-        meter_type: values.meter_type,
-      });
+      const result = await billsApi.payElectricity({
+        meter_number: pendingValues.meter_number,
+        amount: pendingValues.amount,
+        provider: pendingValues.provider,
+        meter_type: pendingValues.meter_type,
+      }, pin);
       toast.success("Electricity token purchased successfully!");
+      updateWalletBalance(queryClient, result?.new_balance);
       form.reset();
       setMeterInfo(null);
       setVerified(false);
+      setPendingValues(null);
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Something went wrong";
       toast.error(message);
@@ -351,6 +372,12 @@ function ElectricityPage() {
           </Card>
         </motion.div>
       </div>
+
+      <PinVerifyDialog
+        open={pinDialogOpen}
+        onOpenChange={setPinDialogOpen}
+        onVerified={(pin) => executeElectricity(pin)}
+      />
     </div>
   );
 }

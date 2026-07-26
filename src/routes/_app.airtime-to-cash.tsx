@@ -1,4 +1,5 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { Coins, Loader2 } from "lucide-react";
 import { useForm } from "react-hook-form";
@@ -21,6 +22,9 @@ import {
 import { airtimeToCashSchema, type AirtimeToCashInput } from "@/lib/validations";
 import { billsApi } from "@/lib/api";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/lib/auth";
+import { PinVerifyDialog } from "@/components/PinVerifyDialog";
+import { updateWalletBalance } from "@/lib/queries";
 
 const providers = [
   { name: "MTN", value: "mtn", color: "#FFCC00" },
@@ -36,28 +40,45 @@ export const Route = createFileRoute("/_app/airtime-to-cash")({
 
 function AirtimeToCashPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [pinDialogOpen, setPinDialogOpen] = useState(false);
+  const [pendingValues, setPendingValues] = useState<AirtimeToCashInput | null>(null);
+  const { hasPin } = useAuth();
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
 
   const form = useForm<AirtimeToCashInput>({
     resolver: zodResolver(airtimeToCashSchema),
     defaultValues: { provider: "", phone: "", amount: undefined },
   });
 
-  async function onSubmit(values: AirtimeToCashInput) {
+  async function executeAirtimeToCash(pin: string) {
+    if (!pendingValues) return;
     setIsSubmitting(true);
     try {
-      await billsApi.convertAirtime({
-        phone: values.phone,
-        amount: values.amount,
-        provider: values.provider,
-      });
+      const result = await billsApi.convertAirtime({
+        phone: pendingValues.phone,
+        amount: pendingValues.amount,
+        provider: pendingValues.provider,
+      }, pin);
       toast.success("Airtime converted to cash successfully!");
+      updateWalletBalance(queryClient, result?.new_balance);
       form.reset();
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Something went wrong";
       toast.error(message);
     } finally {
       setIsSubmitting(false);
+      setPendingValues(null);
     }
+  }
+
+  function onSubmit(values: AirtimeToCashInput) {
+    if (!hasPin) {
+      navigate({ to: "/setup-pin" });
+      return;
+    }
+    setPendingValues(values);
+    setPinDialogOpen(true);
   }
 
   return (
@@ -197,6 +218,11 @@ function AirtimeToCashPage() {
           </Card>
         </motion.div>
       </div>
+      <PinVerifyDialog
+        open={pinDialogOpen}
+        onOpenChange={setPinDialogOpen}
+        onVerified={(pin) => executeAirtimeToCash(pin)}
+      />
     </div>
   );
 }

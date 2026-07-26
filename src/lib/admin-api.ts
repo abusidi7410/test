@@ -17,9 +17,9 @@ export interface AdminUser {
   updated_at: string;
   wallet?: {
     id: number;
-    balance: number;
-    status: string;
-    currency: string;
+    available_balance: number;
+    ledger_balance: number;
+    is_locked: boolean;
   };
 }
 
@@ -81,13 +81,13 @@ function buildQuery(params?: ListParams): string {
 
 export const adminAuth = {
   login(email: string, password: string) {
-    return apiFetch<{ user: AdminUser; token: string; is_admin: boolean }>("/auth/login", {
+    return apiFetch<{ user: AdminUser; token: string }>("/auth/login", {
       method: "POST",
       body: JSON.stringify({ email, password }),
     });
   },
   me() {
-    return apiFetch<{ user: AdminUser; is_admin: boolean }>("/auth/me");
+    return apiFetch<{ user: AdminUser }>("/auth/me");
   },
 };
 
@@ -142,13 +142,13 @@ export const adminUsers = {
     });
   },
   credit(id: number, data: { amount: number; narration?: string }) {
-    return apiFetch<{ message: string; transaction: AdminTransaction }>(
+    return apiFetch<{ message: string; wallet: { id: number; available_balance: number; ledger_balance: number; is_locked: boolean } }>(
       `/admin/users/${id}/credit`,
       { method: "POST", body: JSON.stringify(data) }
     );
   },
   debit(id: number, data: { amount: number; narration?: string }) {
-    return apiFetch<{ message: string; transaction: AdminTransaction }>(
+    return apiFetch<{ message: string; wallet: { id: number; available_balance: number; ledger_balance: number; is_locked: boolean } }>(
       `/admin/users/${id}/debit`,
       { method: "POST", body: JSON.stringify(data) }
     );
@@ -167,10 +167,10 @@ export const adminUsers = {
 
 export const adminAdmins = {
   list() {
-    return apiFetch<{ data: AdminUser[] }>("/admin/admins");
+    return apiFetch<{ admins: AdminUser[] }>("/admin/admins");
   },
   get(id: number) {
-    return apiFetch<{ user: AdminUser }>(`/admin/admins/${id}`);
+    return apiFetch<{ admin: AdminUser }>(`/admin/admins/${id}`);
   },
   create(data: {
     first_name: string;
@@ -180,13 +180,13 @@ export const adminAdmins = {
     password_confirmation: string;
     role?: string;
   }) {
-    return apiFetch<{ user: AdminUser }>("/admin/admins", {
+    return apiFetch<{ admin: AdminUser }>("/admin/admins", {
       method: "POST",
       body: JSON.stringify(data),
     });
   },
   update(id: number, data: Partial<AdminUser>) {
-    return apiFetch<{ message: string; user: AdminUser }>(`/admin/admins/${id}`, {
+    return apiFetch<{ message: string; admin: AdminUser }>(`/admin/admins/${id}`, {
       method: "PUT",
       body: JSON.stringify(data),
     });
@@ -195,10 +195,10 @@ export const adminAdmins = {
     return apiFetch<{ message: string }>(`/admin/admins/${id}`, { method: "DELETE" });
   },
   suspend(id: number) {
-    return apiFetch<{ message: string }>(`/admin/admins/${id}/suspend`, { method: "POST" });
+    return apiFetch<{ message: string; admin: AdminUser }>(`/admin/admins/${id}/suspend`, { method: "POST" });
   },
   activate(id: number) {
-    return apiFetch<{ message: string }>(`/admin/admins/${id}/activate`, { method: "POST" });
+    return apiFetch<{ message: string; admin: AdminUser }>(`/admin/admins/${id}/activate`, { method: "POST" });
   },
 };
 
