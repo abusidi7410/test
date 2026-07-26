@@ -37,13 +37,15 @@ RUN composer install --no-dev --optimize-autoloader --no-interaction --no-script
 # Copy the application source (vendor/ excluded by .dockerignore pattern if needed)
 COPY backend/ .
 
-# Run post-install autoload and create directories
-RUN composer dump-autoload --optimize --no-interaction && \
-    mkdir -p storage/framework/cache \
+# Create required Laravel directories before composer runs its post-autoload scripts
+RUN mkdir -p storage/framework/cache \
     storage/framework/sessions \
     storage/framework/views \
     storage/logs \
-    bootstrap/cache && \
+    bootstrap/cache
+
+# Run post-install autoload now that directories exist and are writable
+RUN composer dump-autoload --optimize --no-interaction && \
     chown -R www-data:www-data storage bootstrap/cache && \
     chmod +x entrypoint.sh
 
