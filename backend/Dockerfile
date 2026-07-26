@@ -29,13 +29,13 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 WORKDIR /var/www
 
 # Copy dependency files first for Docker layer caching
-COPY backend/composer.json backend/composer.lock ./
+COPY composer.json composer.lock ./
 
 # Install dependencies without source/scripts
 RUN composer install --no-dev --optimize-autoloader --no-interaction --no-scripts
 
 # Copy the application source (vendor/ excluded by .dockerignore pattern if needed)
-COPY backend/ .
+COPY . .
 
 # Run post-install autoload and create directories
 RUN composer dump-autoload --optimize --no-interaction && \
