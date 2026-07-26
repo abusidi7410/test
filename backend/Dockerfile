@@ -23,29 +23,44 @@ RUN apt-get update && apt-get install -y \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
+# Allow Composer to run as root inside Docker
+ENV COMPOSER_ALLOW_SUPERUSER=1
+
 # Install Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
 WORKDIR /var/www
 
-# Copy dependency files first for Docker layer caching
+# Copy composer files first
 COPY composer.json composer.lock ./
 
-# Install dependencies without source/scripts
-RUN composer install --no-dev --optimize-autoloader --no-interaction --no-scripts
+# Install dependencies WITHOUT running Laravel scripts
+RUN composer install \
+    --no-dev \
+    --optimize-autoloader \
+    --no-interaction \
+    --no-scripts
 
-# Copy the application source (vendor/ excluded by .dockerignore pattern if needed)
+# Copy the rest of the application
 COPY . .
 
-# Run post-install autoload and create directories
-RUN composer dump-autoload --optimize --no-interaction && \
-    mkdir -p storage/framework/cache \
+# Create Laravel directories BEFORE any artisan command runs
+RUN mkdir -p \
+    storage/framework/cache \
     storage/framework/sessions \
     storage/framework/views \
     storage/logs \
     bootstrap/cache && \
-    chown -R www-data:www-data storage bootstrap/cache && \
-    chmod +x entrypoint.sh
+    chmod -R 775 storage bootstrap/cache && \
+    chown -R www-data:www-data storage bootstrap/cache
+
+# Generate optimized autoload (this runs package:discover)
+RUN composer dump-autoload \
+    --optimize \
+    --no-interaction
+
+# Make startup script executable
+RUN chmod +x entrypoint.sh
 
 EXPOSE 8000
 
