@@ -13,7 +13,7 @@ class SystemSettingSeeder extends Seeder
     {
         $settings = [
             'company' => [
-                'name' => ['value' => 'TechHub', 'type' => 'text', 'description' => 'Company name'],
+                'name' => ['value' => 'Techub', 'type' => 'text', 'description' => 'Company name'],
                 'email' => ['value' => 'support@techhub.com', 'type' => 'text', 'description' => 'Company contact email'],
                 'phone' => ['value' => '', 'type' => 'text', 'description' => 'Company phone number'],
                 'address' => ['value' => '', 'type' => 'text', 'description' => 'Company address'],
@@ -28,12 +28,12 @@ class SystemSettingSeeder extends Seeder
                 'username' => ['value' => '', 'type' => 'text', 'description' => 'SMTP username'],
                 'password' => ['value' => '', 'type' => 'text', 'description' => 'SMTP password'],
                 'from_address' => ['value' => 'noreply@techhub.com', 'type' => 'text', 'description' => 'From email address'],
-                'from_name' => ['value' => 'TechHub', 'type' => 'text', 'description' => 'From name'],
+                'from_name' => ['value' => 'Techub', 'type' => 'text', 'description' => 'From name'],
             ],
             'sms' => [
                 'driver' => ['value' => 'termii', 'type' => 'text', 'description' => 'SMS driver'],
                 'api_key' => ['value' => '', 'type' => 'text', 'description' => 'SMS API key'],
-                'sender_id' => ['value' => 'TechHub', 'type' => 'text', 'description' => 'SMS sender ID'],
+                'sender_id' => ['value' => 'Techub', 'type' => 'text', 'description' => 'SMS sender ID'],
             ],
             'api' => [
                 'rate_limit' => ['value' => '60', 'type' => 'text', 'description' => 'API rate limit per minute'],

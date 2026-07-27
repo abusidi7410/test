@@ -45,7 +45,7 @@ const providers = [
 ];
 
 export const Route = createFileRoute("/_app/electricity")({
-  head: () => ({ meta: [{ title: "Electricity — TechHub" }] }),
+  head: () => ({ meta: [{ title: "Electricity — Techub" }] }),
   component: ElectricityPage,
 });
 

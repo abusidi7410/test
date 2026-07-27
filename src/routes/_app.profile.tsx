@@ -17,7 +17,7 @@ import { useProfile, useUpdateProfile } from "@/lib/queries";
 import { profileSchema, type ProfileInput } from "@/lib/validations";
 
 export const Route = createFileRoute("/_app/profile")({
-  head: () => ({ meta: [{ title: "Profile — TechHub" }] }),
+  head: () => ({ meta: [{ title: "Profile — Techub" }] }),
   component: ProfilePage,
 });
 

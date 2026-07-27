@@ -40,7 +40,7 @@ import { type PaginatedResponse } from "@/lib/admin-api";
 import { formatNaira } from "@/lib/utils";
 
 export const Route = createFileRoute("/admin/users/$id")({
-  head: () => ({ meta: [{ title: "User Detail — TechHub Admin" }] }),
+  head: () => ({ meta: [{ title: "User Detail — Techub Admin" }] }),
   component: AdminUserDetailPage,
 });
 

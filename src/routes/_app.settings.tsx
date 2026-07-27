@@ -16,7 +16,7 @@ import { useSettings, useUpdateSettings } from "@/lib/queries";
 import type { AppSettings } from "@/lib/api";
 
 export const Route = createFileRoute("/_app/settings")({
-  head: () => ({ meta: [{ title: "Settings — TechHub" }] }),
+  head: () => ({ meta: [{ title: "Settings — Techub" }] }),
   component: SettingsPage,
 });
 

@@ -19,7 +19,7 @@ import { PageHeader } from "@/components/layout/PageHeader";
 import { adminAdmins, type AdminUser } from "@/lib/admin-api";
 
 export const Route = createFileRoute("/admin/admins/$id")({
-  head: () => ({ meta: [{ title: "Admin Detail — TechHub Admin" }] }),
+  head: () => ({ meta: [{ title: "Admin Detail — Techub Admin" }] }),
   component: AdminAdminDetailPage,
 });
 

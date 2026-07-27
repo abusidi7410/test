@@ -52,7 +52,7 @@ import {
 import { SERVICE_OPTIONS, SERVICE_LABELS } from "@/lib/constants";
 
 export const Route = createFileRoute("/admin/providers/$id")({
-  head: () => ({ meta: [{ title: "Provider — TechHub Admin" }] }),
+  head: () => ({ meta: [{ title: "Provider — Techub Admin" }] }),
   component: AdminProviderDetailPage,
 });
 

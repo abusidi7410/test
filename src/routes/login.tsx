@@ -17,10 +17,10 @@ import { loginSchema, type LoginInput } from "@/lib/validations";
 export const Route = createFileRoute("/login")({
   head: () => ({
     meta: [
-      { title: "Login — TechHub" },
+      { title: "Login — Techub" },
       {
         name: "description",
-        content: "Log in to your TechHub account to manage your wallet and payments.",
+        content: "Log in to your Techub account to manage your wallet and payments.",
       },
     ],
   }),
@@ -77,7 +77,7 @@ function LoginPage() {
   };
 
   return (
-    <AuthLayout title="Welcome back" subtitle="Log in to continue managing your TechHub account.">
+    <AuthLayout title="Welcome back" subtitle="Log in to continue managing your Techub account.">
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         <div>
           <Label htmlFor="email" className="mb-1.5 block text-xs font-medium">

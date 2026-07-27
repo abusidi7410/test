@@ -25,7 +25,7 @@ return [
     'facebook' => [
         'client_id' => env('FACEBOOK_CLIENT_ID'),
         'client_secret' => env('FACEBOOK_CLIENT_SECRET'),
-        'redirect' => env('FACEBOOK_REDIRECT_URL'),
+        'redirect' => env('FACEBOOK_REDIRECT_URL', env('APP_URL', 'http://localhost:8000') . '/api/auth/social/facebook/callback'),
     ],
 
     'apple' => [

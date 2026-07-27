@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import type {} from "@tanstack/react-start";
 
-const BASE_URL = import.meta.env.VITE_SITE_URL || "https://techhub.example.com";
+const BASE_URL = import.meta.env.VITE_SITE_URL || "https://techub.pages.dev";
 
 export const Route = createFileRoute("/sitemap.xml")({
   server: {

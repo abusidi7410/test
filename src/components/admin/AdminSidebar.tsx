@@ -24,6 +24,7 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
 import { Badge } from "@/components/ui/badge";
+import { Logo } from "@/components/brand/Logo";
 
 const adminGroups = [
   {
@@ -68,11 +69,9 @@ export function AdminSidebar() {
     <Sidebar collapsible="icon" className="border-r border-sidebar-border">
       <SidebarHeader className="border-b border-sidebar-border px-4 py-4">
         <Link to="/admin/dashboard" className="flex items-center gap-2">
-          <div className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-primary text-primary-foreground font-bold text-sm">
-            TH
-          </div>
+          <Logo mark className="h-8 w-8" />
           <span className="hidden truncate text-base font-bold group-data-[collapsible=icon]:hidden">
-            TechHub
+            Techub
           </span>
           <Badge variant="secondary" className="ml-auto hidden text-[9px] font-bold uppercase group-data-[collapsible=icon]:hidden">
             Admin

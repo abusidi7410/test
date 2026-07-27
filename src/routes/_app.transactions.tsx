@@ -26,7 +26,7 @@ import { useTransactions } from "@/lib/queries";
 import { formatNaira } from "@/lib/utils";
 
 export const Route = createFileRoute("/_app/transactions")({
-  head: () => ({ meta: [{ title: "Transactions — TechHub" }] }),
+  head: () => ({ meta: [{ title: "Transactions — Techub" }] }),
   component: TransactionsPage,
 });
 

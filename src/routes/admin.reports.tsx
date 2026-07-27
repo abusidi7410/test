@@ -14,7 +14,7 @@ import { Badge } from "@/components/ui/badge";
 import { PageHeader } from "@/components/layout/PageHeader";
 
 export const Route = createFileRoute("/admin/reports")({
-  head: () => ({ meta: [{ title: "Reports — TechHub Admin" }] }),
+  head: () => ({ meta: [{ title: "Reports — Techub Admin" }] }),
   component: AdminReportsPage,
 });
 

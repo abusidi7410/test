@@ -79,22 +79,22 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "TechHub — Modern Fintech Dashboard" },
+      { title: "Techub — Modern Fintech Dashboard" },
       {
         name: "description",
         content:
-          "TechHub is a modern fintech platform for wallets, transfers, airtime, data, and bill payments.",
+          "Techub is a modern fintech platform for wallets, transfers, airtime, data, and bill payments.",
       },
-      { name: "author", content: "TechHub" },
-      { property: "og:title", content: "TechHub — Modern Fintech Dashboard" },
+      { name: "author", content: "Techub" },
+      { property: "og:title", content: "Techub — Modern Fintech Dashboard" },
       {
         property: "og:description",
         content:
-          "TechHub is a modern fintech platform for wallets, transfers, airtime, data, and bill payments.",
+          "Techub is a modern fintech platform for wallets, transfers, airtime, data, and bill payments.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
-      { name: "twitter:site", content: "@TechHub" },
+      { name: "twitter:site", content: "@Techub" },
     ],
     links: [
       {

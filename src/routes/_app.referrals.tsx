@@ -10,7 +10,7 @@ import { useReferrals } from "@/lib/queries";
 import { formatNaira } from "@/lib/utils";
 
 export const Route = createFileRoute("/_app/referrals")({
-  head: () => ({ meta: [{ title: "Referrals — TechHub" }] }),
+  head: () => ({ meta: [{ title: "Referrals — Techub" }] }),
   component: ReferralsPage,
 });
 

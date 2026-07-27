@@ -8,7 +8,7 @@ import { PinInput } from "@/components/ui/pin-input";
 import { pinApi } from "@/lib/api";
 
 export const Route = createFileRoute("/_app/reset-pin")({
-  head: () => ({ meta: [{ title: "Reset Transaction PIN — TechHub" }] }),
+  head: () => ({ meta: [{ title: "Reset Transaction PIN — Techub" }] }),
   component: ResetPinPage,
 });
 

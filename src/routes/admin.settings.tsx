@@ -14,7 +14,7 @@ import { adminSettings } from "@/lib/admin-api";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/admin/settings")({
-  head: () => ({ meta: [{ title: "Settings — TechHub Admin" }] }),
+  head: () => ({ meta: [{ title: "Settings — Techub Admin" }] }),
   component: AdminSettingsPage,
 });
 
@@ -51,9 +51,9 @@ interface SettingsState {
 }
 
 const defaults: SettingsState = {
-  platform_name: "TechHub",
+  platform_name: "Techub",
   support_email: "support@techhub.com",
-  platform_description: "TechHub is your all-in-one financial services platform.",
+  platform_description: "Techub is your all-in-one financial services platform.",
   default_currency: "NGN",
   maintenance_mode: false,
   require_2fa: false,

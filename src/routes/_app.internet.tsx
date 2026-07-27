@@ -41,7 +41,7 @@ const providers = [
 ];
 
 export const Route = createFileRoute("/_app/internet")({
-  head: () => ({ meta: [{ title: "Internet — TechHub" }] }),
+  head: () => ({ meta: [{ title: "Internet — Techub" }] }),
   component: InternetPage,
 });
 
@@ -105,7 +105,7 @@ function InternetPage() {
     <div>
       <PageHeader
         title="Internet subscription"
-        description="Pay your ISP directly from your TechHub wallet."
+        description="Pay your ISP directly from your Techub wallet."
       />
       <div className="grid gap-6 lg:grid-cols-3">
         <motion.div
@@ -231,7 +231,7 @@ function InternetPage() {
               </div>
               <h3 className="text-base font-semibold">About Internet</h3>
               <p className="mt-1 text-sm text-muted-foreground">
-                Pay your ISP directly from your TechHub wallet.
+                Pay your ISP directly from your Techub wallet.
               </p>
               <div className="mt-5 space-y-3 border-t border-border pt-5 text-sm">
                 <div className="flex items-center justify-between">

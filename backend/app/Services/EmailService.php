@@ -18,7 +18,7 @@ class EmailService
     {
         $this->apiKey = (string) config('services.resend.api_key', env('RESEND_API_KEY'));
         $this->fromEmail = (string) config('services.resend.from_email', env('MAIL_FROM_ADDRESS', 'noreply@techhub.io'));
-        $this->fromName = (string) config('services.resend.from_name', env('MAIL_FROM_NAME', 'TechHub'));
+        $this->fromName = (string) config('services.resend.from_name', env('MAIL_FROM_NAME', 'Techub'));
     }
 
     public function send(User $user, string $template, array $data = []): bool
@@ -88,12 +88,12 @@ class EmailService
     {
         $name = $user->first_name;
         return [
-            'subject' => 'Welcome to TechHub!',
-            'html' => "<h2>Welcome to TechHub, {$name}!</h2>
-            <p>Thank you for joining TechHub, your all-in-one financial services platform.</p>
+            'subject' => 'Welcome to Techub!',
+            'html' => "<h2>Welcome to Techub, {$name}!</h2>
+            <p>Thank you for joining Techub, your all-in-one financial services platform.</p>
             <p>You can now fund your wallet, buy airtime, data, pay bills, and much more.</p>
             <p>If you have any questions, our support team is here to help.</p>
-            <br><p>Best regards,<br>The TechHub Team</p>",
+            <br><p>Best regards,<br>The Techub Team</p>",
         ];
     }
 
@@ -108,7 +108,7 @@ class EmailService
             <p><a href='{$resetUrl}'>Reset Password</a></p>
             <p>This link will expire in 60 minutes.</p>
             <p>If you didn't request this, please ignore this email.</p>
-            <br><p>Best regards,<br>The TechHub Team</p>",
+            <br><p>Best regards,<br>The Techub Team</p>",
         ];
     }
 
@@ -130,7 +130,7 @@ class EmailService
             <tr><td style='padding:8px;border-bottom:1px solid #eee'><strong>Description:</strong></td><td style='padding:8px;border-bottom:1px solid #eee'>{$description}</td></tr>
             <tr><td style='padding:8px;border-bottom:1px solid #eee'><strong>Status:</strong></td><td style='padding:8px;border-bottom:1px solid #eee'>{$status}</td></tr>
             </table>
-            <br><p>Best regards,<br>The TechHub Team</p>",
+            <br><p>Best regards,<br>The Techub Team</p>",
         ];
     }
 
@@ -145,7 +145,7 @@ class EmailService
             <p>Hi {$user->first_name},</p>
             <p>Your wallet has been credited with <strong>₦{$amount}</strong>.</p>
             <p>New balance: <strong>₦{$balance}</strong></p>
-            <br><p>Best regards,<br>The TechHub Team</p>",
+            <br><p>Best regards,<br>The Techub Team</p>",
         ];
     }
 
@@ -161,7 +161,7 @@ class EmailService
             <p>Hi {$user->first_name},</p>
             <p>Your wallet has been debited with <strong>₦{$amount}</strong> for {$description}.</p>
             <p>New balance: <strong>₦{$balance}</strong></p>
-            <br><p>Best regards,<br>The TechHub Team</p>",
+            <br><p>Best regards,<br>The Techub Team</p>",
         ];
     }
 
@@ -175,7 +175,7 @@ class EmailService
             'html' => "<h2>Transfer Completed</h2>
             <p>Hi {$user->first_name},</p>
             <p>Your transfer of <strong>₦{$amount}</strong> to {$recipient} has been completed.</p>
-            <br><p>Best regards,<br>The TechHub Team</p>",
+            <br><p>Best regards,<br>The Techub Team</p>",
         ];
     }
 
@@ -189,15 +189,15 @@ class EmailService
             <p>Hi {$user->first_name},</p>
             <p>Congratulations! You've earned a referral bonus of <strong>₦{$amount}</strong>.</p>
             <p>Keep inviting friends to earn more!</p>
-            <br><p>Best regards,<br>The TechHub Team</p>",
+            <br><p>Best regards,<br>The Techub Team</p>",
         ];
     }
 
     private function genericEmail(User $user, array $data): array
     {
         return [
-            'subject' => $data['subject'] ?? 'Notification from TechHub',
-            'html' => $data['body'] ?? '<p>You have a new notification from TechHub.</p>',
+            'subject' => $data['subject'] ?? 'Notification from Techub',
+            'html' => $data['body'] ?? '<p>You have a new notification from Techub.</p>',
         ];
     }
 }

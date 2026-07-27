@@ -37,7 +37,7 @@ import { giftCardApi, type GiftCard } from "@/lib/api";
 import { z } from "zod";
 
 export const Route = createFileRoute("/_app/gift-cards")({
-  head: () => ({ meta: [{ title: "Gift Cards — TechHub" }] }),
+  head: () => ({ meta: [{ title: "Gift Cards — Techub" }] }),
   component: GiftCardsPage,
 });
 

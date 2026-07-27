@@ -33,7 +33,7 @@ class SocialAuthController extends Controller
     {
         if (!in_array($provider, $this->providers)) {
             return redirect()->away(
-                env('FRONTEND_URL', 'http://localhost:5173') . '/login?error=unsupported_provider'
+                config('frontend.url', 'http://localhost:5173') . '/login?error=unsupported_provider'
             );
         }
 
@@ -41,7 +41,7 @@ class SocialAuthController extends Controller
 
         if (config("services.{$configKey}.client_id") === null || config("services.{$configKey}.client_id") === '') {
             return redirect()->away(
-                env('FRONTEND_URL', 'http://localhost:5173') . '/login?error=provider_not_configured'
+                config('frontend.url', 'http://localhost:5173') . '/login?error=provider_not_configured'
             );
         }
 
@@ -49,7 +49,7 @@ class SocialAuthController extends Controller
 
         if (empty($redirectUrl)) {
             return redirect()->away(
-                env('FRONTEND_URL', 'http://localhost:5173') . '/login?error=' . urlencode('Redirect URL not configured for ' . ucfirst($provider))
+                config('frontend.url', 'http://localhost:5173') . '/login?error=' . urlencode('Redirect URL not configured for ' . ucfirst($provider))
             );
         }
 
@@ -59,7 +59,7 @@ class SocialAuthController extends Controller
                 ->redirect();
         } catch (\Exception $e) {
             return redirect()->away(
-                env('FRONTEND_URL', 'http://localhost:5173') . '/login?error=' . urlencode('Failed to connect with ' . ucfirst($provider) . ': ' . $e->getMessage())
+                config('frontend.url', 'http://localhost:5173') . '/login?error=' . urlencode('Failed to connect with ' . ucfirst($provider) . ': ' . $e->getMessage())
             );
         }
     }
@@ -81,7 +81,7 @@ class SocialAuthController extends Controller
 
     public function callback(string $provider): RedirectResponse
     {
-        $frontendUrl = env('FRONTEND_URL', 'http://localhost:5173');
+        $frontendUrl = config('frontend.url', 'http://localhost:5173');
 
         if (!in_array($provider, $this->providers)) {
             return redirect()->away($frontendUrl . '/login?error=unsupported_provider');

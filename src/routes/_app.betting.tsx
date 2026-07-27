@@ -34,7 +34,7 @@ const providers = [
 ];
 
 export const Route = createFileRoute("/_app/betting")({
-  head: () => ({ meta: [{ title: "Betting — TechHub" }] }),
+  head: () => ({ meta: [{ title: "Betting — Techub" }] }),
   component: BettingPage,
 });
 
@@ -85,7 +85,7 @@ function BettingPage() {
     <div>
       <PageHeader
         title="Fund betting wallet"
-        description="Fund your betting account instantly from your TechHub wallet."
+        description="Fund your betting account instantly from your Techub wallet."
       />
       <div className="grid gap-6 lg:grid-cols-3">
         <motion.div
@@ -197,7 +197,7 @@ function BettingPage() {
               </div>
               <h3 className="text-base font-semibold">About Betting</h3>
               <p className="mt-1 text-sm text-muted-foreground">
-                Fund your betting account instantly from your TechHub wallet.
+                Fund your betting account instantly from your Techub wallet.
               </p>
               <div className="mt-5 space-y-3 border-t border-border pt-5 text-sm">
                 <div className="flex items-center justify-between">

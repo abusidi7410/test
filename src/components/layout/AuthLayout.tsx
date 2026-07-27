@@ -43,7 +43,7 @@ export function AuthLayout({
             <div className="grid h-9 w-9 place-items-center rounded-lg bg-primary text-primary-foreground">
               <span className="text-sm font-bold">T</span>
             </div>
-            <span className="text-lg font-bold tracking-tight">TechHub</span>
+            <span className="text-lg font-bold tracking-tight">Techub</span>
           </div>
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -78,7 +78,7 @@ export function AuthLayout({
               ))}
             </div>
           </motion.div>
-          <div className="text-xs text-white/50">© 2026 TechHub Financial Technologies</div>
+          <div className="text-xs text-white/50">© 2026 Techub Financial Technologies</div>
         </div>
       </div>
     </div>

@@ -34,7 +34,7 @@ const providers = [
 ];
 
 export const Route = createFileRoute("/_app/airtime-to-cash")({
-  head: () => ({ meta: [{ title: "Airtime to Cash — TechHub" }] }),
+  head: () => ({ meta: [{ title: "Airtime to Cash — Techub" }] }),
   component: AirtimeToCashPage,
 });
 

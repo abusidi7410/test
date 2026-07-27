@@ -40,7 +40,7 @@ const providers = [
 ];
 
 export const Route = createFileRoute("/_app/cable-tv")({
-  head: () => ({ meta: [{ title: "Cable TV — TechHub" }] }),
+  head: () => ({ meta: [{ title: "Cable TV — Techub" }] }),
   component: CableTvPage,
 });
 

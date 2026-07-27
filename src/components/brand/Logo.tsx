@@ -8,7 +8,7 @@ export function Logo({ className, mark = false }: { className?: string; mark?: b
       </div>
       {!mark && (
         <span className="text-lg font-bold tracking-tight text-foreground">
-          Tech<span className="text-primary">Hub</span>
+          Tech<span className="text-primary">hub</span>
         </span>
       )}
     </div>

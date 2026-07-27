@@ -33,7 +33,7 @@ import { PinVerifyDialog } from "@/components/PinVerifyDialog";
 import { updateWalletBalance } from "@/lib/queries";
 
 export const Route = createFileRoute("/_app/transfer")({
-  head: () => ({ meta: [{ title: "Transfer — TechHub" }] }),
+  head: () => ({ meta: [{ title: "Transfer — Techub" }] }),
   component: TransferPage,
 });
 
@@ -85,7 +85,7 @@ function TransferPage() {
     <div>
       <PageHeader
         title="Send money"
-        description="Transfer instantly to any TechHub user or Nigerian bank account."
+        description="Transfer instantly to any Techub user or Nigerian bank account."
       />
       <div className="grid gap-6 lg:grid-cols-3">
         <motion.div
@@ -205,7 +205,7 @@ function TransferPage() {
               </div>
               <h3 className="text-base font-semibold">About Transfer</h3>
               <p className="mt-1 text-sm text-muted-foreground">
-                Transfer instantly to any TechHub user or Nigerian bank account.
+                Transfer instantly to any Techub user or Nigerian bank account.
               </p>
               <div className="mt-5 space-y-3 border-t border-border pt-5 text-sm">
                 <div className="flex items-center justify-between">

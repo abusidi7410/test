@@ -29,7 +29,7 @@ import { adminDashboard, type AdminDashboardStats } from "@/lib/admin-api";
 import { formatNaira } from "@/lib/utils";
 
 export const Route = createFileRoute("/admin/dashboard")({
-  head: () => ({ meta: [{ title: "Admin Dashboard — TechHub" }] }),
+  head: () => ({ meta: [{ title: "Admin Dashboard — Techub" }] }),
   component: AdminDashboardPage,
 });
 

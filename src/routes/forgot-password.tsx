@@ -14,8 +14,8 @@ import { forgotPasswordSchema, type ForgotPasswordInput } from "@/lib/validation
 export const Route = createFileRoute("/forgot-password")({
   head: () => ({
     meta: [
-      { title: "Reset password — TechHub" },
-      { name: "description", content: "Reset your TechHub account password." },
+      { title: "Reset password — Techub" },
+      { name: "description", content: "Reset your Techub account password." },
     ],
   }),
   component: ForgotPage,

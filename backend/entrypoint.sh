@@ -2,7 +2,7 @@
 set -e
 
 echo "================================================"
-echo "      TechHub Backend - Railway Startup"
+echo "      Techub Backend - Railway Startup"
 echo "================================================"
 echo "ENTRYPOINT VERSION 2026-07-27-v3"
 echo ""

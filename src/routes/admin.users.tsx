@@ -45,7 +45,7 @@ import { formatNaira } from "@/lib/utils";
 import { useDebounce } from "@/hooks/use-debounce";
 
 export const Route = createFileRoute("/admin/users")({
-  head: () => ({ meta: [{ title: "Users — TechHub Admin" }] }),
+  head: () => ({ meta: [{ title: "Users — Techub Admin" }] }),
   component: AdminUsersPage,
 });
 

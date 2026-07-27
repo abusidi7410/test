@@ -25,8 +25,8 @@ import { registerSchema, type RegisterInput } from "@/lib/validations";
 export const Route = createFileRoute("/register")({
   head: () => ({
     meta: [
-      { title: "Create account — TechHub" },
-      { name: "description", content: "Create your TechHub account in seconds." },
+      { title: "Create account — Techub" },
+      { name: "description", content: "Create your Techub account in seconds." },
     ],
   }),
   component: RegisterPage,
@@ -91,7 +91,7 @@ function RegisterPage() {
   };
 
   return (
-    <AuthLayout title="Create your account" subtitle="Join TechHub and start moving money smarter.">
+    <AuthLayout title="Create your account" subtitle="Join Techub and start moving money smarter.">
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         <div className="grid gap-4 sm:grid-cols-2">
           <div>
@@ -219,15 +219,15 @@ function RegisterPage() {
               <div className="space-y-4 text-sm text-muted-foreground">
                 <h3 className="font-semibold text-foreground">1. Acceptance of Terms</h3>
                 <p>
-                  By accessing and using TechHub ("the Platform"), you agree to be bound by these
+                  By accessing and using Techub ("the Platform"), you agree to be bound by these
                   Terms and Conditions. If you do not agree to these terms, please do not use the
                   Platform.
                 </p>
                 <h3 className="font-semibold text-foreground">2. Description of Service</h3>
                 <p>
-                  TechHub is a financial technology platform that provides digital wallet services,
+                  Techub is a financial technology platform that provides digital wallet services,
                   bill payments, airtime/data purchases, fund transfers, and other financial
-                  services. TechHub is not a bank and does not provide banking services.
+                  services. Techub is not a bank and does not provide banking services.
                 </p>
                 <h3 className="font-semibold text-foreground">3. Account Registration</h3>
                 <p>
@@ -238,15 +238,15 @@ function RegisterPage() {
                 </p>
                 <h3 className="font-semibold text-foreground">4. Wallet and Funds</h3>
                 <p>
-                  Funds loaded into your TechHub wallet are held in trust accounts managed by our
-                  partner banks. TechHub does not pay interest on wallet balances. You may fund your
+                  Funds loaded into your Techub wallet are held in trust accounts managed by our
+                  partner banks. Techub does not pay interest on wallet balances. You may fund your
                   wallet through approved payment methods, and funds are subject to applicable
                   transaction limits.
                 </p>
                 <h3 className="font-semibold text-foreground">5. Transactions and Fees</h3>
                 <p>
                   All transactions are subject to applicable fees which will be displayed before you
-                  confirm any transaction. TechHub reserves the right to modify fees with reasonable
+                  confirm any transaction. Techub reserves the right to modify fees with reasonable
                   notice. Transaction limits may apply based on your account level and verification
                   status.
                 </p>
@@ -254,12 +254,12 @@ function RegisterPage() {
                 <p>
                   You agree not to use the Platform for any unlawful purpose, to engage in
                   fraudulent activities, to money launder, to fund terrorism, or to violate any
-                  applicable laws or regulations. TechHub reserves the right to suspend or terminate
+                  applicable laws or regulations. Techub reserves the right to suspend or terminate
                   accounts engaged in prohibited activities.
                 </p>
                 <h3 className="font-semibold text-foreground">7. Limitation of Liability</h3>
                 <p>
-                  TechHub shall not be liable for any indirect, incidental, special, or
+                  Techub shall not be liable for any indirect, incidental, special, or
                   consequential damages arising from your use of the Platform. Our total liability
                   shall not exceed the total amount of fees paid by you in the twelve (12) months
                   preceding the claim.
@@ -268,7 +268,7 @@ function RegisterPage() {
                   8. Account Suspension and Termination
                 </h3>
                 <p>
-                  TechHub reserves the right to suspend or terminate your account at any time if we
+                  Techub reserves the right to suspend or terminate your account at any time if we
                   suspect fraudulent, unauthorized, or illegal activity, or a violation of these
                   Terms. You may also close your account at any time by contacting support.
                 </p>
@@ -280,7 +280,7 @@ function RegisterPage() {
                 </p>
                 <h3 className="font-semibold text-foreground">10. Changes to Terms</h3>
                 <p>
-                  TechHub may update these Terms at any time. Continued use of the Platform after
+                  Techub may update these Terms at any time. Continued use of the Platform after
                   changes constitutes acceptance of the new Terms. We will notify you of material
                   changes via email or in-app notification.
                 </p>

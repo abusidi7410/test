@@ -10,7 +10,7 @@ import { paymentApi, type PaymentVerifyResponse, ApiError } from "@/lib/api";
 import { formatNaira } from "@/lib/utils";
 
 export const Route = createFileRoute("/_app/payment/success")({
-  head: () => ({ meta: [{ title: "Payment Processing — TechHub" }] }),
+  head: () => ({ meta: [{ title: "Payment Processing — Techub" }] }),
   component: PaymentSuccessPage,
 });
 

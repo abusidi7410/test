@@ -38,10 +38,10 @@ import { formatNaira } from "@/lib/utils";
 export const Route = createFileRoute("/_app/dashboard")({
   head: () => ({
     meta: [
-      { title: "Dashboard — TechHub" },
+      { title: "Dashboard — Techub" },
       {
         name: "description",
-        content: "Your TechHub wallet, spending and quick actions in one place.",
+        content: "Your Techub wallet, spending and quick actions in one place.",
       },
     ],
   }),

@@ -33,7 +33,7 @@ import { PinVerifyDialog } from "@/components/PinVerifyDialog";
 import { updateWalletBalance } from "@/lib/queries";
 
 export const Route = createFileRoute("/_app/withdraw")({
-  head: () => ({ meta: [{ title: "Withdraw — TechHub" }] }),
+  head: () => ({ meta: [{ title: "Withdraw — Techub" }] }),
   component: WithdrawPage,
 });
 
@@ -85,7 +85,7 @@ function WithdrawPage() {
     <div>
       <PageHeader
         title="Withdraw funds"
-        description="Move money from your TechHub wallet to your bank account."
+        description="Move money from your Techub wallet to your bank account."
       />
       <div className="grid gap-6 lg:grid-cols-3">
         <motion.div
@@ -203,7 +203,7 @@ function WithdrawPage() {
               </div>
               <h3 className="text-base font-semibold">About Withdraw</h3>
               <p className="mt-1 text-sm text-muted-foreground">
-                Move money from your TechHub wallet to your bank account.
+                Move money from your Techub wallet to your bank account.
               </p>
               <div className="mt-5 space-y-3 border-t border-border pt-5 text-sm">
                 <div className="flex items-center justify-between">

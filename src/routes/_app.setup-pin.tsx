@@ -8,7 +8,7 @@ import { PinInput } from "@/components/ui/pin-input";
 import { pinApi } from "@/lib/api";
 
 export const Route = createFileRoute("/_app/setup-pin")({
-  head: () => ({ meta: [{ title: "Set Transaction PIN — TechHub" }] }),
+  head: () => ({ meta: [{ title: "Set Transaction PIN — Techub" }] }),
   component: SetupPinPage,
 });
 

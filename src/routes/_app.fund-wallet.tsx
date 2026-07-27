@@ -30,7 +30,7 @@ const methods = [
 ];
 
 export const Route = createFileRoute("/_app/fund-wallet")({
-  head: () => ({ meta: [{ title: "Fund Wallet — TechHub" }] }),
+  head: () => ({ meta: [{ title: "Fund Wallet — Techub" }] }),
   component: FundWalletPage,
 });
 
@@ -64,7 +64,7 @@ function FundWalletPage() {
     <div>
       <PageHeader
         title="Fund your wallet"
-        description="Top up your TechHub wallet with a card, bank transfer or USSD."
+        description="Top up your Techub wallet with a card, bank transfer or USSD."
       />
       <div className="grid gap-6 lg:grid-cols-3">
         <motion.div
@@ -155,7 +155,7 @@ function FundWalletPage() {
               </div>
               <h3 className="text-base font-semibold">About Fund Wallet</h3>
               <p className="mt-1 text-sm text-muted-foreground">
-                Top up your TechHub wallet with a card, bank transfer or USSD.
+                Top up your Techub wallet with a card, bank transfer or USSD.
               </p>
               <div className="mt-5 space-y-3 border-t border-border pt-5 text-sm">
                 <div className="flex items-center justify-between">

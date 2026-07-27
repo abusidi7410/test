@@ -18,7 +18,7 @@ import { useWallet, useTransactions } from "@/lib/queries";
 import { formatNaira } from "@/lib/utils";
 
 export const Route = createFileRoute("/_app/wallet")({
-  head: () => ({ meta: [{ title: "Wallet — TechHub" }] }),
+  head: () => ({ meta: [{ title: "Wallet — Techub" }] }),
   component: WalletPage,
 });
 
@@ -45,7 +45,7 @@ function WalletPage() {
           <CardContent className="relative flex h-full flex-col justify-between p-8">
             <div className="flex items-start justify-between">
               <div>
-                <div className="text-xs uppercase tracking-wider text-white/70">TechHub Wallet</div>
+                <div className="text-xs uppercase tracking-wider text-white/70">Techub Wallet</div>
                 <div className="mt-1 text-sm text-white/80">Primary account</div>
               </div>
               <CreditCard className="h-6 w-6 text-white/80" />

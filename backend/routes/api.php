@@ -44,8 +44,6 @@ Route::get('/auth/social/{provider}/redirect', [SocialAuthController::class, 're
 Route::get('/auth/social/{provider}/callback', [SocialAuthController::class, 'callback'])
     ->middleware('throttle:login');
 Route::get('/auth/social/{provider}/callback-token', [SocialAuthController::class, 'callbackToken']);
-Route::get('/auth/debug/redirect-uri/{provider}', [SocialAuthController::class, 'debugRedirectUri']);
-
 Route::post('/webhooks/vtpass', [WebhookController::class, 'handleVtpassCallback']);
 
 // Paystack webhook — must be public (no auth) since Paystack calls this directly.

@@ -8,7 +8,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useNotifications, useMarkAllNotificationsRead } from "@/lib/queries";
 
 export const Route = createFileRoute("/_app/notifications")({
-  head: () => ({ meta: [{ title: "Notifications — TechHub" }] }),
+  head: () => ({ meta: [{ title: "Notifications — Techub" }] }),
   component: NotificationsPage,
 });
 

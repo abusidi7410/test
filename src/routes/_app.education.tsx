@@ -34,7 +34,7 @@ const providers = [
 ];
 
 export const Route = createFileRoute("/_app/education")({
-  head: () => ({ meta: [{ title: "Education — TechHub" }] }),
+  head: () => ({ meta: [{ title: "Education — Techub" }] }),
   component: EducationPage,
 });
 

@@ -42,7 +42,7 @@ import {
 import { adminAdmins, type AdminUser } from "@/lib/admin-api";
 
 export const Route = createFileRoute("/admin/admins")({
-  head: () => ({ meta: [{ title: "Admins — TechHub Admin" }] }),
+  head: () => ({ meta: [{ title: "Admins — Techub Admin" }] }),
   component: AdminAdminsPage,
 });
 

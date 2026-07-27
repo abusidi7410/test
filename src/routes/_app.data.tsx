@@ -41,7 +41,7 @@ const providers = [
 ];
 
 export const Route = createFileRoute("/_app/data")({
-  head: () => ({ meta: [{ title: "Buy Data — TechHub" }] }),
+  head: () => ({ meta: [{ title: "Buy Data — Techub" }] }),
   component: DataPage,
 });
 
