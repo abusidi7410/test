@@ -47,7 +47,7 @@ echo ""
 # -------------------------------------------------
 # 3. Wait for database connection
 # -------------------------------------------------
-eecho "[3/7] Waiting for database..."
+echo "[3/7] Waiting for database..."
 
 MAX_RETRIES=30
 RETRY_COUNT=0
