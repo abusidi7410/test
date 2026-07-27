@@ -1,10 +1,13 @@
 #!/bin/sh
 set -e
 
+echo "==============================="
+echo "ENTRYPOINT VERSION 2026-07-27"
+echo "==============================="
+
 echo "============================================"
 echo "  TechHub Backend - Starting Up"
 echo "============================================"
-
 # -----------------------------------------------
 # 1. Create required directories
 # -----------------------------------------------
@@ -17,14 +20,17 @@ mkdir -p storage/app \
     bootstrap/cache
 
 # -----------------------------------------------
-# 2. Generate APP_KEY if missing
+# 2. Check APP_KEY
 # -----------------------------------------------
 echo "[2/7] Checking APP_KEY..."
+
 if [ -z "$APP_KEY" ]; then
-    echo "  WARNING: APP_KEY is not set. Generating a temporary key..."
-    php artisan key:generate --force
-    echo "  Set APP_KEY in Railway environment for persistence across restarts."
+    echo "ERROR: APP_KEY environment variable is missing."
+    echo "Add APP_KEY to Railway Variables."
+    exit 1
 fi
+
+echo "APP_KEY found."
 
 # -----------------------------------------------
 # 3. Wait for database
