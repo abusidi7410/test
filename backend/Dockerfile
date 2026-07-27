@@ -1,67 +1,67 @@
-FROM php:8.3-cli
+FROM dunglas/frankenphp:1-php8.3-bookworm
 
-# Install system dependencies
-RUN apt-get update && apt-get install -y \
-    git \
-    curl \
-    zip \
-    unzip \
+# Install system dependencies for PHP extensions
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libpq-dev \
     libpng-dev \
     libonig-dev \
     libxml2-dev \
     libzip-dev \
-    libpq-dev \
-    && docker-php-ext-install \
+    unzip \
+    git \
+    && docker-php-ext-install -j$(nproc) \
         pdo_pgsql \
-        pgsql \
+        pdo_mysql \
         mbstring \
         exif \
         pcntl \
         bcmath \
         gd \
         zip \
+        xml \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
-# Allow Composer to run as root inside Docker
-ENV COMPOSER_ALLOW_SUPERUSER=1
-
 # Install Composer
-COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+ENV COMPOSER_ALLOW_SUPERUSER=1
+COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
-WORKDIR /var/www
+WORKDIR /app
 
-# Copy composer files first
+# Copy dependency files first for Docker layer caching
 COPY composer.json composer.lock ./
 
-# Install dependencies WITHOUT running Laravel scripts
+# Install production dependencies without running scripts
 RUN composer install \
     --no-dev \
     --optimize-autoloader \
     --no-interaction \
-    --no-scripts
+    --no-scripts \
+    --prefer-dist
 
-# Copy the rest of the application
+# Copy application code
 COPY . .
 
-# Create Laravel directories BEFORE any artisan command runs
+# Create required directories
 RUN mkdir -p \
-    storage/framework/cache \
+    storage/app \
+    storage/framework/cache/data \
     storage/framework/sessions \
     storage/framework/views \
     storage/logs \
-    bootstrap/cache && \
-    chmod -R 775 storage bootstrap/cache && \
-    chown -R www-data:www-data storage bootstrap/cache
+    bootstrap/cache
 
-# Generate optimized autoload (this runs package:discover)
-RUN composer dump-autoload \
-    --optimize \
-    --no-interaction
+# Optimize autoloader and discover packages (runs post-autoload-dump)
+RUN composer dump-autoload --optimize --no-interaction
 
-# Make startup script executable
-RUN chmod +x entrypoint.sh
+# Set correct permissions
+RUN chown -R www-data:www-data /app/storage /app/bootstrap/cache \
+    && chmod -R 775 /app/storage /app/bootstrap/cache
 
-EXPOSE 8000
+# Copy FrankenPHP server config
+COPY Caddyfile /etc/caddy/Caddyfile
 
-CMD ["./entrypoint.sh"]
+EXPOSE 80
+
+ENTRYPOINT ["/app/entrypoint.sh"]
+CMD ["frankenphp", "run", "--config", "/etc/caddy/Caddyfile"]
