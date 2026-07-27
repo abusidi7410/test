@@ -1,7 +1,5 @@
 <?php
 
-declare(strict_types=1);
-
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -22,7 +20,8 @@ return new class extends Migration
             $table->timestamp('used_at')->nullable();
             $table->timestamps();
 
-            $table->index(['user_id', 'otp']);
+            $table->index('user_id');
+            $table->index('expires_at');
         });
     }
 
