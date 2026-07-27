@@ -1,17 +1,17 @@
 FROM dunglas/frankenphp:1-php8.3-bookworm
 
-# Install system dependencies for PHP extensions
+# Install required system packages and PHP extensions
 RUN apt-get update && apt-get install -y --no-install-recommends \
+    git \
+    unzip \
     libpq-dev \
     libpng-dev \
     libonig-dev \
     libxml2-dev \
     libzip-dev \
-    unzip \
-    git \
     && docker-php-ext-install -j$(nproc) \
-        pdo_pgsql \
         pdo_mysql \
+        pdo_pgsql \
         mbstring \
         exif \
         pcntl \
@@ -22,27 +22,32 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
-# Install Composer
+# Allow Composer to run as root inside Docker
 ENV COMPOSER_ALLOW_SUPERUSER=1
+
+# Install Composer
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
 WORKDIR /app
 
-# Copy dependency files first for Docker layer caching
+# Copy Composer files first (Docker cache optimization)
 COPY composer.json composer.lock ./
 
-# Install production dependencies without running scripts
+# Install PHP dependencies
 RUN composer install \
     --no-dev \
-    --optimize-autoloader \
     --no-interaction \
     --no-scripts \
-    --prefer-dist
+    --prefer-dist \
+    --optimize-autoloader
 
-# Copy application code
+# Copy application
 COPY . .
 
-# Create required directories
+# Make entrypoint executable immediately
+RUN chmod +x /app/entrypoint.sh
+
+# Create Laravel directories
 RUN mkdir -p \
     storage/app \
     storage/framework/cache/data \
@@ -51,17 +56,21 @@ RUN mkdir -p \
     storage/logs \
     bootstrap/cache
 
-# Optimize autoloader and discover packages (runs post-autoload-dump)
+# Generate optimized autoloader
 RUN composer dump-autoload --optimize --no-interaction
 
-# Set correct permissions
+# Fix permissions
 RUN chown -R www-data:www-data /app/storage /app/bootstrap/cache \
     && chmod -R 775 /app/storage /app/bootstrap/cache
 
-# Copy FrankenPHP server config
+# Copy Caddy configuration
 COPY Caddyfile /etc/caddy/Caddyfile
 
+# Expose HTTP port
 EXPOSE 80
 
+# Startup script
 ENTRYPOINT ["/app/entrypoint.sh"]
+
+# Start FrankenPHP
 CMD ["frankenphp", "run", "--config", "/etc/caddy/Caddyfile"]
