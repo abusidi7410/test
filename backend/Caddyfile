@@ -1,20 +1,27 @@
-{$PORT:80} {
-	root * /app/public
-	php_server
+{
+    auto_https off
+}
 
-	encode gzip
+:{$PORT} {
+    root * /app/public
 
-	header {
-		X-Frame-Options "SAMEORIGIN"
-		X-Content-Type-Options "nosniff"
-		X-XSS-Protection "1; mode=block"
-		Referrer-Policy "strict-origin-when-cross-origin"
-		Strict-Transport-Security "max-age=31536000; includeSubDomains"
-		-Server
-	}
+    encode gzip
 
-	log {
-		output stderr
-		format json
-	}
+    php_server
+
+    file_server
+
+    header {
+        X-Frame-Options "SAMEORIGIN"
+        X-Content-Type-Options "nosniff"
+        X-XSS-Protection "1; mode=block"
+        Referrer-Policy "strict-origin-when-cross-origin"
+        Strict-Transport-Security "max-age=31536000; includeSubDomains"
+        -Server
+    }
+
+    log {
+        output stderr
+        format json
+    }
 }
