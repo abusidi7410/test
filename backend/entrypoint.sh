@@ -1,89 +1,119 @@
 #!/bin/sh
 set -e
 
-echo "==============================="
-echo "ENTRYPOINT VERSION 2026-07-27"
-echo "==============================="
+echo "================================================"
+echo "      TechHub Backend - Railway Startup"
+echo "================================================"
+echo "ENTRYPOINT VERSION 2026-07-27-v2"
+echo ""
 
-echo "============================================"
-echo "  TechHub Backend - Starting Up"
-echo "============================================"
-# -----------------------------------------------
+# -------------------------------------------------
 # 1. Create required directories
-# -----------------------------------------------
-echo "[1/7] Creating directories..."
-mkdir -p storage/app \
+# -------------------------------------------------
+echo "[1/7] Creating Laravel directories..."
+
+mkdir -p \
+    storage/app \
     storage/framework/cache/data \
     storage/framework/sessions \
     storage/framework/views \
     storage/logs \
     bootstrap/cache
 
-# -----------------------------------------------
-# 2. Check APP_KEY
-# -----------------------------------------------
-echo "[2/7] Checking APP_KEY..."
+# -------------------------------------------------
+# 2. Verify APP_KEY
+# -------------------------------------------------
+echo "[2/7] Checking application configuration..."
 
 if [ -z "$APP_KEY" ]; then
-    echo "ERROR: APP_KEY environment variable is missing."
-    echo "Add APP_KEY to Railway Variables."
+    echo ""
+    echo "ERROR: APP_KEY is missing."
+    echo "Configure APP_KEY in Railway Variables."
     exit 1
 fi
 
 echo "APP_KEY found."
 
-# -----------------------------------------------
+echo ""
+echo "========== DATABASE CONFIG =========="
+echo "APP_ENV=$APP_ENV"
+echo "DB_CONNECTION=$DB_CONNECTION"
+echo "DB_HOST=$DB_HOST"
+echo "DB_PORT=$DB_PORT"
+echo "DB_DATABASE=$DB_DATABASE"
+echo "DB_USERNAME=$DB_USERNAME"
+echo "====================================="
+echo ""
+
+# -------------------------------------------------
 # 3. Wait for database
-# -----------------------------------------------
+# -------------------------------------------------
 echo "[3/7] Waiting for database..."
+
 MAX_RETRIES=30
 RETRY_COUNT=0
-until php artisan migrate:status --no-interaction > /dev/null 2>&1; do
+
+until php artisan migrate:status --no-interaction
+do
     RETRY_COUNT=$((RETRY_COUNT + 1))
+
     if [ "$RETRY_COUNT" -ge "$MAX_RETRIES" ]; then
-        echo "  WARNING: Database not ready after $MAX_RETRIES attempts. Continuing anyway..."
+        echo ""
+        echo "Database still unavailable after $MAX_RETRIES attempts."
+        echo "Continuing startup..."
         break
     fi
-    echo "  Database not ready, retrying in 2s... ($RETRY_COUNT/$MAX_RETRIES)"
+
+    echo "Database not ready... retry $RETRY_COUNT/$MAX_RETRIES"
     sleep 2
 done
+
 if [ "$RETRY_COUNT" -lt "$MAX_RETRIES" ]; then
-    echo "  Database connected successfully."
+    echo "Database connection successful."
 fi
 
-# -----------------------------------------------
-# 4. Clear old caches (must clear before re-caching)
-# -----------------------------------------------
-echo "[4/7] Clearing old caches..."
-php artisan config:clear 2>/dev/null || true
-php artisan route:clear 2>/dev/null || true
-php artisan view:clear 2>/dev/null || true
-php artisan cache:clear 2>/dev/null || true
+# -------------------------------------------------
+# 4. Clear caches
+# -------------------------------------------------
+echo "[4/7] Clearing Laravel caches..."
 
-# -----------------------------------------------
-# 5. Cache configuration and routes
-# -----------------------------------------------
-echo "[5/7] Caching configuration..."
-php artisan config:cache 2>/dev/null || true
-php artisan route:cache 2>/dev/null || true
-php artisan view:cache 2>/dev/null || true
+php artisan optimize:clear || true
 
-# -----------------------------------------------
-# 6. Fix permissions after all writes are complete
-# -----------------------------------------------
+# -------------------------------------------------
+# 5. Cache configuration
+# -------------------------------------------------
+echo "[5/7] Building caches..."
+
+php artisan config:cache || true
+php artisan route:cache || true
+
+# Only cache Blade views if they exist
+if [ -d resources/views ]; then
+    php artisan view:cache || true
+else
+    echo "resources/views not found. Skipping view cache."
+fi
+
+# -------------------------------------------------
+# 6. Permissions
+# -------------------------------------------------
 echo "[6/7] Fixing permissions..."
-chown -R www-data:www-data storage bootstrap/cache 2>/dev/null || true
-chmod -R 775 storage bootstrap/cache 2>/dev/null || true
 
-# -----------------------------------------------
+chmod -R 775 storage bootstrap/cache || true
+chown -R www-data:www-data storage bootstrap/cache || true
+
+# -------------------------------------------------
 # 7. Run migrations
-# -----------------------------------------------
+# -------------------------------------------------
 echo "[7/7] Running migrations..."
-php artisan migrate --force 2>/dev/null || true
 
-echo "============================================"
-echo "  Startup complete. Launching server..."
-echo "============================================"
+php artisan migrate --force
 
-# Execute the CMD (frankenphp for web, schedule:work for cron)
+echo ""
+echo "================================================"
+echo "Laravel startup completed successfully."
+echo "Launching FrankenPHP..."
+echo "================================================"
+echo ""
+
 exec "$@"
