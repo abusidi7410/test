@@ -15,7 +15,10 @@ return Application::configure(basePath: dirname(__DIR__))
         commands: __DIR__ . '/../routes/console.php',
     )
     ->withMiddleware(function (Middleware $middleware) {
+        $middleware->trustProxies(at: '*');
+
         $middleware->api(prepend: [
+            \App\Http\Middleware\ForceJsonResponse::class,
             \App\Http\Middleware\RequestTiming::class,
         ]);
 
