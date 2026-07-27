@@ -8,19 +8,25 @@ return new class extends Migration
 {
     public function up(): void
     {
-        if (! Schema::hasColumn('users', 'transaction_pin')) {
-            Schema::table('users', function (Blueprint $table) {
-                $table->string('transaction_pin')->nullable();
-            });
+        if (Schema::hasTable('pin_resets')) {
+            return;
         }
+
+        Schema::create('pin_resets', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('user_id')->constrained()->cascadeOnDelete();
+            $table->string('otp', 6);
+            $table->timestamp('expires_at');
+            $table->timestamp('used_at')->nullable();
+            $table->timestamps();
+
+            $table->index('user_id');
+            $table->index('expires_at');
+        });
     }
 
     public function down(): void
     {
-        if (Schema::hasColumn('users', 'transaction_pin')) {
-            Schema::table('users', function (Blueprint $table) {
-                $table->dropColumn('transaction_pin');
-            });
-        }
+        Schema::dropIfExists('pin_resets');
     }
 };
