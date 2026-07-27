@@ -52,7 +52,7 @@ echo "[3/7] Waiting for database..."
 MAX_RETRIES=30
 RETRY_COUNT=0
 
-until php artisan migrate --pretend --force >/dev/null 2>&1
+until php artisan migrate:status >/dev/null 2>&1
 do
     RETRY_COUNT=$((RETRY_COUNT + 1))
 
