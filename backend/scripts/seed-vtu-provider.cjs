@@ -22,7 +22,7 @@ const VTPASS_CREDENTIALS = {
   is_default: true,
   supported_services: JSON.stringify([
     'airtime', 'data', 'electricity', 'cable_tv',
-    'internet', 'education', 'betting', 'airtime_to_cash',
+    'internet', 'education', 'airtime_to_cash',
   ]),
 };
 

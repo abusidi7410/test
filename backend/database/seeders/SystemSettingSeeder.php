@@ -12,52 +12,44 @@ class SystemSettingSeeder extends Seeder
     public function run(): void
     {
         $settings = [
-            'company' => [
-                'name' => ['value' => 'Techub', 'type' => 'text', 'description' => 'Company name'],
-                'email' => ['value' => 'support@techhub.com', 'type' => 'text', 'description' => 'Company contact email'],
-                'phone' => ['value' => '', 'type' => 'text', 'description' => 'Company phone number'],
-                'address' => ['value' => '', 'type' => 'text', 'description' => 'Company address'],
-                'website' => ['value' => 'https://techhub.com', 'type' => 'text', 'description' => 'Company website'],
-                'logo' => ['value' => '', 'type' => 'text', 'description' => 'Company logo URL'],
-                'timezone' => ['value' => 'Africa/Lagos', 'type' => 'text', 'description' => 'Default timezone'],
-            ],
-            'email' => [
-                'driver' => ['value' => 'smtp', 'type' => 'text', 'description' => 'Email driver'],
-                'host' => ['value' => 'smtp.mailtrap.io', 'type' => 'text', 'description' => 'SMTP host'],
-                'port' => ['value' => '587', 'type' => 'text', 'description' => 'SMTP port'],
-                'username' => ['value' => '', 'type' => 'text', 'description' => 'SMTP username'],
-                'password' => ['value' => '', 'type' => 'text', 'description' => 'SMTP password'],
-                'from_address' => ['value' => 'noreply@techhub.com', 'type' => 'text', 'description' => 'From email address'],
-                'from_name' => ['value' => 'Techub', 'type' => 'text', 'description' => 'From name'],
-            ],
-            'sms' => [
-                'driver' => ['value' => 'termii', 'type' => 'text', 'description' => 'SMS driver'],
-                'api_key' => ['value' => '', 'type' => 'text', 'description' => 'SMS API key'],
-                'sender_id' => ['value' => 'Techub', 'type' => 'text', 'description' => 'SMS sender ID'],
-            ],
-            'api' => [
-                'rate_limit' => ['value' => '60', 'type' => 'text', 'description' => 'API rate limit per minute'],
-                'timeout' => ['value' => '30', 'type' => 'text', 'description' => 'API request timeout in seconds'],
-                'debug_mode' => ['value' => 'false', 'type' => 'text', 'description' => 'API debug mode'],
+            'general' => [
+                'platform_name' => ['value' => 'Techub', 'type' => 'text', 'description' => 'Platform name'],
+                'support_email' => ['value' => 'support@techub.com', 'type' => 'text', 'description' => 'Support email address'],
+                'platform_description' => ['value' => 'Techub is your all-in-one financial services platform.', 'type' => 'text', 'description' => 'Platform description'],
+                'default_currency' => ['value' => 'NGN', 'type' => 'text', 'description' => 'Default currency'],
+                'maintenance_mode' => ['value' => 'false', 'type' => 'boolean', 'description' => 'Enable maintenance mode'],
             ],
             'security' => [
+                'require_2fa' => ['value' => 'false', 'type' => 'boolean', 'description' => 'Require two-factor authentication'],
+                'require_email_verification' => ['value' => 'true', 'type' => 'boolean', 'description' => 'Require email verification for new users'],
+                'login_notifications' => ['value' => 'true', 'type' => 'boolean', 'description' => 'Notify on new login sessions'],
+                'session_timeout' => ['value' => '60', 'type' => 'text', 'description' => 'Session timeout in minutes'],
                 'max_login_attempts' => ['value' => '5', 'type' => 'text', 'description' => 'Maximum login attempts before lockout'],
-                'lockout_duration' => ['value' => '15', 'type' => 'text', 'description' => 'Lockout duration in minutes'],
-                'require_2fa' => ['value' => 'false', 'type' => 'text', 'description' => 'Require two-factor authentication'],
-                'session_timeout' => ['value' => '120', 'type' => 'text', 'description' => 'Session timeout in minutes'],
-                'password_min_length' => ['value' => '8', 'type' => 'text', 'description' => 'Minimum password length'],
             ],
-            'vtu' => [
-                'default_charge_airtime' => ['value' => '0', 'type' => 'text', 'description' => 'Default airtime charge'],
-                'default_charge_data' => ['value' => '0', 'type' => 'text', 'description' => 'Default data charge'],
-                'default_charge_electricity' => ['value' => '0', 'type' => 'text', 'description' => 'Default electricity charge'],
-                'markup_percentage' => ['value' => '0', 'type' => 'text', 'description' => 'VTU markup percentage'],
+            'fees' => [
+                'airtime_fee' => ['value' => '2', 'type' => 'text', 'description' => 'Airtime fee percentage'],
+                'data_fee' => ['value' => '2', 'type' => 'text', 'description' => 'Data fee percentage'],
+                'electricity_fee' => ['value' => '100', 'type' => 'text', 'description' => 'Electricity fee flat amount'],
+                'transfer_fee' => ['value' => '50', 'type' => 'text', 'description' => 'Transfer fee flat amount'],
+                'withdrawal_fee' => ['value' => '1.5', 'type' => 'text', 'description' => 'Withdrawal fee percentage'],
+                'min_transaction' => ['value' => '100', 'type' => 'text', 'description' => 'Minimum transaction amount'],
+                'flat_fee_mode' => ['value' => 'false', 'type' => 'boolean', 'description' => 'Use flat fees instead of percentage'],
             ],
-            'notifications' => [
-                'email_enabled' => ['value' => 'true', 'type' => 'text', 'description' => 'Enable email notifications'],
-                'sms_enabled' => ['value' => 'true', 'type' => 'text', 'description' => 'Enable SMS notifications'],
-                'push_enabled' => ['value' => 'true', 'type' => 'text', 'description' => 'Enable push notifications'],
-                'in_app_enabled' => ['value' => 'true', 'type' => 'text', 'description' => 'Enable in-app notifications'],
+            'email' => [
+                'smtp_host' => ['value' => 'smtp.resend.com', 'type' => 'text', 'description' => 'SMTP host'],
+                'smtp_port' => ['value' => '587', 'type' => 'text', 'description' => 'SMTP port'],
+                'smtp_username' => ['value' => 'resend', 'type' => 'text', 'description' => 'SMTP username'],
+                'smtp_password' => ['value' => '', 'type' => 'text', 'description' => 'SMTP password'],
+                'welcome_email' => ['value' => 'true', 'type' => 'boolean', 'description' => 'Send welcome email on registration'],
+                'transaction_receipts' => ['value' => 'true', 'type' => 'boolean', 'description' => 'Email receipts for all transactions'],
+                'weekly_reports' => ['value' => 'false', 'type' => 'boolean', 'description' => 'Send weekly activity reports'],
+            ],
+            'social' => [
+                'google_enabled' => ['value' => 'true', 'type' => 'boolean', 'description' => 'Enable Google login'],
+                'google_client_id' => ['value' => '', 'type' => 'text', 'description' => 'Google OAuth client ID'],
+                'google_client_secret' => ['value' => '', 'type' => 'text', 'description' => 'Google OAuth client secret'],
+                'apple_enabled' => ['value' => 'false', 'type' => 'boolean', 'description' => 'Enable Apple login'],
+                'whatsapp_enabled' => ['value' => 'false', 'type' => 'boolean', 'description' => 'Enable WhatsApp login'],
             ],
         ];
 

@@ -10,6 +10,7 @@ use App\Http\Controllers\Controller;
 use App\Models\AuditLog;
 use App\Models\Transaction;
 use App\Models\WalletHistory;
+use App\Services\Email\EmailNotificationService;
 use App\Services\PaystackService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -283,6 +284,15 @@ class PaystackWebhookController extends Controller
                 // Fire event for notification dispatch
                 event(new TransactionCompleted($transaction));
             });
+
+            app(EmailNotificationService::class)->sendWalletFunded(
+                $transaction->user,
+                number_format($amountInNaira, 2),
+                $reference,
+                number_format($transaction->user->wallet->available_balance, 2),
+                $verifiedData['channel'] ?? null,
+                now()->format('j F Y, g:i A'),
+            );
 
             Log::info('Paystack webhook charge.success: processed successfully', [
                 'reference' => $reference,

@@ -18,7 +18,6 @@ import { Route as RegisterRouteImport } from './routes/register'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as AppAirtimeRouteImport } from './routes/_app.airtime'
 import { Route as AppAirtimeToCashRouteImport } from './routes/_app.airtime-to-cash'
-import { Route as AppBettingRouteImport } from './routes/_app.betting'
 import { Route as AppCableTvRouteImport } from './routes/_app.cable-tv'
 import { Route as AppDashboardRouteImport } from './routes/_app.dashboard'
 import { Route as AppDataRouteImport } from './routes/_app.data'
@@ -92,11 +91,6 @@ const AppAirtimeRoute = AppAirtimeRouteImport.update({
 const AppAirtimeToCashRoute = AppAirtimeToCashRouteImport.update({
   id: '/airtime-to-cash',
   path: '/airtime-to-cash',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppBettingRoute = AppBettingRouteImport.update({
-  id: '/betting',
-  path: '/betting',
   getParentRoute: () => AppRoute,
 } as any)
 const AppCableTvRoute = AppCableTvRouteImport.update({
@@ -259,7 +253,7 @@ export interface FileRoutesByFullPath {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/airtime': typeof AppAirtimeRoute
   '/airtime-to-cash': typeof AppAirtimeToCashRoute
-  '/betting': typeof AppBettingRoute
+
   '/cable-tv': typeof AppCableTvRoute
   '/dashboard': typeof AppDashboardRoute
   '/data': typeof AppDataRoute
@@ -300,7 +294,7 @@ export interface FileRoutesByTo {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/airtime': typeof AppAirtimeRoute
   '/airtime-to-cash': typeof AppAirtimeToCashRoute
-  '/betting': typeof AppBettingRoute
+
   '/cable-tv': typeof AppCableTvRoute
   '/dashboard': typeof AppDashboardRoute
   '/data': typeof AppDataRoute
@@ -343,7 +337,7 @@ export interface FileRoutesById {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/_app/airtime': typeof AppAirtimeRoute
   '/_app/airtime-to-cash': typeof AppAirtimeToCashRoute
-  '/_app/betting': typeof AppBettingRoute
+
   '/_app/cable-tv': typeof AppCableTvRoute
   '/_app/dashboard': typeof AppDashboardRoute
   '/_app/data': typeof AppDataRoute
@@ -386,7 +380,7 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/airtime'
     | '/airtime-to-cash'
-    | '/betting'
+
     | '/cable-tv'
     | '/dashboard'
     | '/data'
@@ -427,7 +421,7 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/airtime'
     | '/airtime-to-cash'
-    | '/betting'
+
     | '/cable-tv'
     | '/dashboard'
     | '/data'
@@ -469,7 +463,7 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/_app/airtime'
     | '/_app/airtime-to-cash'
-    | '/_app/betting'
+
     | '/_app/cable-tv'
     | '/_app/dashboard'
     | '/_app/data'
@@ -578,14 +572,7 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppAirtimeToCashRouteImport
       parentRoute: typeof AppRoute
     }
-    '/_app/betting': {
-      id: '/_app/betting'
-      path: '/betting'
-      fullPath: '/betting'
-      preLoaderRoute: typeof AppBettingRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/_app/cable-tv': {
+'/_app/cable-tv': {
       id: '/_app/cable-tv'
       path: '/cable-tv'
       fullPath: '/cable-tv'
@@ -801,8 +788,7 @@ declare module '@tanstack/react-router' {
 interface AppRouteChildren {
   AppAirtimeRoute: typeof AppAirtimeRoute
   AppAirtimeToCashRoute: typeof AppAirtimeToCashRoute
-  AppBettingRoute: typeof AppBettingRoute
-  AppCableTvRoute: typeof AppCableTvRoute
+AppCableTvRoute: typeof AppCableTvRoute
   AppDashboardRoute: typeof AppDashboardRoute
   AppDataRoute: typeof AppDataRoute
   AppEducationRoute: typeof AppEducationRoute
@@ -826,8 +812,7 @@ interface AppRouteChildren {
 const AppRouteChildren: AppRouteChildren = {
   AppAirtimeRoute: AppAirtimeRoute,
   AppAirtimeToCashRoute: AppAirtimeToCashRoute,
-  AppBettingRoute: AppBettingRoute,
-  AppCableTvRoute: AppCableTvRoute,
+AppCableTvRoute: AppCableTvRoute,
   AppDashboardRoute: AppDashboardRoute,
   AppDataRoute: AppDataRoute,
   AppEducationRoute: AppEducationRoute,

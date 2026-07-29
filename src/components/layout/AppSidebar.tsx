@@ -62,7 +62,7 @@ const groups = [
       { title: "Internet", url: "/internet", icon: Globe },
       { title: "Education", url: "/education", icon: GraduationCap },
       { title: "Gift Cards", url: "/gift-cards", icon: Gift },
-      { title: "Betting", url: "/betting", icon: Landmark },
+  
     ],
   },
   {

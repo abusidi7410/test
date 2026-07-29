@@ -9,10 +9,12 @@ use App\Http\Controllers\Controller;
 use App\Models\Transaction;
 use App\Models\User;
 use App\Models\VtuProvider;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Response;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class AdminReportController extends Controller
 {
@@ -80,6 +82,42 @@ class AdminReportController extends Controller
         response()->stream(function () use ($csvContent) {
             echo $csvContent;
         }, 200, $headers)->send();
+    }
+
+    public function exportPdf(Request $request): mixed
+    {
+        $validated = $request->validate([
+            'type' => ['required', 'string', 'in:transactions,users,revenue,providers'],
+            'period' => ['nullable', 'string', 'in:daily,weekly,monthly,yearly'],
+            'start_date' => ['nullable', 'date'],
+            'end_date' => ['nullable', 'date', 'after_or_equal:start_date'],
+        ]);
+
+        $startDate = $validated['start_date'] ? Carbon::parse($validated['start_date'])->startOfDay() : Carbon::now()->subDays(30)->startOfDay();
+        $endDate = $validated['end_date'] ? Carbon::parse($validated['end_date'])->endOfDay() : Carbon::now()->endOfDay();
+        $period = $validated['period'] ?? 'daily';
+
+        $data = match ($validated['type']) {
+            'transactions' => $this->getTransactionReport($startDate, $endDate, $period),
+            'users' => $this->getUserReport($startDate, $endDate, $period),
+            'revenue' => $this->getRevenueReport($startDate, $endDate, $period),
+            'providers' => $this->getProviderReport($startDate, $endDate, $period),
+        };
+
+        $report = [
+            'type' => $validated['type'],
+            'period' => $period,
+            'start_date' => $startDate->toDateString(),
+            'end_date' => $endDate->toDateString(),
+            'generated_at' => now()->toISOString(),
+            ...$data,
+        ];
+
+        $title = ucfirst($validated['type']) . ' Report';
+        $filename = 'report_' . $validated['type'] . '_' . $startDate->format('Y-m-d') . '_to_' . $endDate->format('Y-m-d') . '.pdf';
+
+        $pdf = Pdf::loadView('reports.pdf', compact('title', 'report'));
+        return $pdf->download($filename);
     }
 
     private function getTransactionReport(Carbon $startDate, Carbon $endDate, string $period): array

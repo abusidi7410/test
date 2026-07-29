@@ -323,7 +323,7 @@ function RegisterPage() {
                 <p>
                   You have the right to access, correct, or delete your personal information. You
                   may also request a copy of the data we hold about you. To exercise these rights,
-                  contact our support team at support@techhub.io.
+                  contact our support team at support@techub.com.
                 </p>
                 <h3 className="font-semibold text-foreground">7. Cookies and Tracking</h3>
                 <p>
@@ -346,7 +346,7 @@ function RegisterPage() {
                 <h3 className="font-semibold text-foreground">10. Contact Us</h3>
                 <p>
                   If you have questions about this Privacy Policy, please contact us at
-                  support@techhub.io.
+                  support@techub.com.
                 </p>
               </div>
             )}

@@ -17,7 +17,7 @@ class EmailService
     public function __construct()
     {
         $this->apiKey = (string) config('services.resend.api_key', env('RESEND_API_KEY'));
-        $this->fromEmail = (string) config('services.resend.from_email', env('MAIL_FROM_ADDRESS', 'noreply@techhub.io'));
+        $this->fromEmail = (string) config('services.resend.from_email', env('MAIL_FROM_ADDRESS', 'noreply@techub.com'));
         $this->fromName = (string) config('services.resend.from_name', env('MAIL_FROM_NAME', 'Techub'));
     }
 

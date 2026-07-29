@@ -31,8 +31,7 @@ class VtuProviderSeeder extends Seeder
                     'cable_tv',
                     'internet',
                     'education',
-                    'betting',
-                    'airtime_to_cash',
+'airtime_to_cash',
                 ],
             ]
         );

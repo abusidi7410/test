@@ -511,16 +511,6 @@ export const billsApi = {
     });
   },
 
-  fundBetting(data: { user_id: string; amount: number; provider: string }, pin?: string) {
-    const headers: Record<string, string> = {};
-    if (pin) headers["X-Transaction-Pin"] = pin;
-    return apiFetch<BillResponse>("/bills/betting", {
-      method: "POST",
-      body: JSON.stringify(data),
-      headers,
-    });
-  },
-
   convertAirtime(data: { phone: string; amount: number; provider: string }, pin?: string) {
     const headers: Record<string, string> = {};
     if (pin) headers["X-Transaction-Pin"] = pin;

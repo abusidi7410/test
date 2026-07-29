@@ -82,8 +82,7 @@ Route::middleware('auth.token')->group(function () {
         Route::post('/bills/cable-tv', [BillPaymentController::class, 'subscribeCable']);
         Route::post('/bills/internet', [BillPaymentController::class, 'subscribeInternet']);
         Route::post('/bills/education', [BillPaymentController::class, 'buyEducationPin']);
-        Route::post('/bills/betting', [BillPaymentController::class, 'fundBetting']);
-        Route::post('/bills/airtime-to-cash', [BillPaymentController::class, 'convertAirtime']);
+Route::post('/bills/airtime-to-cash', [BillPaymentController::class, 'convertAirtime']);
 
         Route::post('/transfers', [TransferController::class, 'store']);
         Route::post('/withdrawals', [WithdrawController::class, 'store']);
@@ -197,7 +196,8 @@ Route::middleware('admin')->prefix('admin')->group(function () {
 
     // Reports
     Route::get('/reports', [AdminReportController::class, 'index']);
-    Route::get('/reports/export', [AdminReportController::class, 'export']);
+    Route::get('/reports/export/csv', [AdminReportController::class, 'export']);
+    Route::get('/reports/export/pdf', [AdminReportController::class, 'exportPdf']);
 
     // Wallet Management (admin-side)
     Route::get('/wallets', [AdminWalletController::class, 'index']);
@@ -209,15 +209,23 @@ Route::middleware('admin')->prefix('admin')->group(function () {
     Route::get('/wallets/{id}/history', [AdminWalletController::class, 'history']);
 
     // System Settings
-    Route::get('/settings', function () {
+    Route::get('/settings', function (\Illuminate\Http\Request $request) {
+        $group = $request->query('group');
+        if ($group) {
+            $data = \App\Models\SystemSetting::getGroup($group);
+        } else {
+            $data = \App\Models\SystemSetting::pluck('value', 'key_name')->toArray();
+        }
         return response()->json([
             'success' => true,
-            'data' => \App\Models\SystemSetting::pluck('value', 'key_name')->toArray(),
+            'data' => $data,
         ]);
     });
     Route::put('/settings/{group}', function (\Illuminate\Http\Request $request, string $group) {
         $validated = $request->validate(['settings' => 'required|array']);
         \App\Models\SystemSetting::setGroup($group, $validated['settings']);
+        // Clear the group cache to ensure fresh reads
+        \Illuminate\Support\Facades\Cache::forget("system_settings:group:{$group}");
         return response()->json(['success' => true, 'message' => 'Settings updated.']);
     });
 });

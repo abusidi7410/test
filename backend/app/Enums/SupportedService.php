@@ -12,8 +12,7 @@ enum SupportedService: string
     case CABLE_TV = 'cable_tv';
     case INTERNET = 'internet';
     case EDUCATION = 'education';
-    case BETTING = 'betting';
-    case AIRTIME_TO_CASH = 'airtime_to_cash';
+case AIRTIME_TO_CASH = 'airtime_to_cash';
     case WAEC = 'waec';
     case NECO = 'neco';
     case JAMB = 'jamb';
@@ -27,8 +26,7 @@ enum SupportedService: string
             self::CABLE_TV => 'Cable TV',
             self::INTERNET => 'Internet',
             self::EDUCATION => 'Education',
-            self::BETTING => 'Betting',
-            self::AIRTIME_TO_CASH => 'Airtime to Cash',
+self::AIRTIME_TO_CASH => 'Airtime to Cash',
             self::WAEC => 'WAEC',
             self::NECO => 'NECO',
             self::JAMB => 'JAMB',

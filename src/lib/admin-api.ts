@@ -508,15 +508,38 @@ export const adminGateways = {
 };
 
 // Reports
+async function downloadExport(url: string) {
+  const token = localStorage.getItem('techhub_token');
+  const response = await fetch(url, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!response.ok) throw new Error('Export failed');
+  const blob = await response.blob();
+  const disposition = response.headers.get('Content-Disposition') || '';
+  const match = disposition.match(/filename[^;=\n]*=(["']?)([^"'\n]*)\1/);
+  const filename = match ? match[2] : 'report';
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(blob);
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(link.href);
+}
+
 export const adminReports = {
   generate(params: { type: string; period: string; start_date?: string; end_date?: string }) {
     return apiFetch<Record<string, unknown>>(`/admin/reports${buildQuery(params as ListParams)}`);
   },
-  exportCsv(params: { type: string; period: string; start_date?: string; end_date?: string }) {
+  async exportCsv(params: { type: string; period: string; start_date?: string; end_date?: string }) {
     const query = buildQuery(params as ListParams);
-    const url = `${import.meta.env.VITE_API_URL || '/api'}/admin/reports/export${query}`;
-    const token = localStorage.getItem('techhub_token');
-    window.open(`${url}${query.includes('?') ? '&' : '?'}token=${token}`, '_blank');
+    const base = import.meta.env.VITE_API_URL || '/api';
+    await downloadExport(`${base}/admin/reports/export/csv${query}`);
+  },
+  async exportPdf(params: { type: string; period: string; start_date?: string; end_date?: string }) {
+    const query = buildQuery(params as ListParams);
+    const base = import.meta.env.VITE_API_URL || '/api';
+    await downloadExport(`${base}/admin/reports/export/pdf${query}`);
   },
 };
 

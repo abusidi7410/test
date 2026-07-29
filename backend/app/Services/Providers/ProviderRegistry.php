@@ -176,8 +176,7 @@ class ProviderRegistry
                 Cache::forget(self::CACHE_KEY . ':cable_tv');
                 Cache::forget(self::CACHE_KEY . ':internet');
                 Cache::forget(self::CACHE_KEY . ':education');
-                Cache::forget(self::CACHE_KEY . ':betting');
-                Cache::forget(self::CACHE_KEY . ':airtime_to_cash');
+Cache::forget(self::CACHE_KEY . ':airtime_to_cash');
                 Cache::forget(self::CACHE_KEY . ':waec');
                 Cache::forget(self::CACHE_KEY . ':neco');
                 Cache::forget(self::CACHE_KEY . ':jamb');

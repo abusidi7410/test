@@ -572,38 +572,6 @@ class BillPaymentController extends Controller
         );
     }
 
-    public function fundBetting(Request $request): JsonResponse
-    {
-        return $this->processBillPayment(
-            $request,
-            'betting',
-            'betting',
-            [
-                'user_id' => ['required', 'string', 'max:50'],
-                'amount' => ['required', 'numeric', 'min:100', 'max:100000'],
-                'provider' => ['required', 'string', 'in:sportybet,bet9ja,betty,betking,1xbet'],
-            ],
-            'Betting funding',
-            function (array $validated): callable {
-                return function ($adapter) use ($validated) {
-                    $serviceMap = [
-                        'sportybet' => 'sportybet',
-                        'bet9ja' => 'bet9ja',
-                        'betty' => 'bet9ja',
-                        'betking' => 'betking',
-                        '1xbet' => '1xbet',
-                    ];
-
-                    return $adapter->pay(
-                        $serviceMap[$validated['provider']] ?? $validated['provider'],
-                        (string) $validated['amount'],
-                        $validated['user_id'],
-                        $validated['provider'],
-                    );
-                };
-            },
-        );
-    }
 
     public function convertAirtime(Request $request): JsonResponse
     {

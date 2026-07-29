@@ -52,12 +52,14 @@ class SendTransactionNotification
                 ],
             ]);
 
-            SendEmailJob::dispatch($transaction->user_id, 'transaction_receipt', [
-                'amount' => $transaction->amount,
-                'reference' => $transaction->reference,
-                'description' => $title,
-                'status' => 'completed',
-            ])->onQueue('emails');
+            if ($transaction->category->value === 'wallet_funding') {
+                SendEmailJob::dispatch($transaction->user_id, 'transaction_receipt', [
+                    'amount' => $transaction->amount,
+                    'reference' => $transaction->reference,
+                    'description' => $title,
+                    'status' => 'completed',
+                ])->onQueue('emails');
+            }
 
             $this->processReferralEarnings($transaction);
 

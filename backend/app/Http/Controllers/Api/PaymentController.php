@@ -11,6 +11,7 @@ use App\Models\Transaction;
 use App\Models\User;
 use App\Models\Wallet;
 use App\Models\WalletHistory;
+use App\Services\Email\EmailNotificationService;
 use App\Services\PaystackService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -215,6 +216,15 @@ class PaymentController extends Controller
                 // Fire event for notification + email receipt
                 event(new TransactionCompleted($transaction));
             });
+
+            app(EmailNotificationService::class)->sendWalletFunded(
+                $user,
+                number_format($amountInNaira, 2),
+                $reference,
+                number_format($user->fresh()->wallet->available_balance, 2),
+                $verifiedData['channel'] ?? null,
+                now()->format('j F Y, g:i A'),
+            );
 
             Log::info('Payment verify: wallet credited successfully', [
                 'reference' => $reference,

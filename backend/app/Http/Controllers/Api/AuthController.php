@@ -10,9 +10,9 @@ use App\Models\Referral;
 use App\Models\User;
 use App\Models\UserSetting;
 use App\Models\Wallet;
+use App\Services\Email\EmailNotificationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Str;
@@ -79,6 +79,8 @@ class AuthController extends Controller
         });
 
         $token = $user->createToken('auth-token')->plainTextToken;
+
+        app(EmailNotificationService::class)->sendWelcome($user);
 
         return $this->successResponse([
             'user' => $user->load('wallet'),
@@ -178,13 +180,12 @@ class AuthController extends Controller
             return $this->successResponse(null, 'If an account with that email exists, a reset link has been sent.');
         }
 
-        $status = Password::sendResetLink(
-            ['email' => $validated['email']]
-        );
+        $token = Password::broker()->createToken($user);
 
-        if ($status !== Password::RESET_LINK_SENT) {
-            return $this->errorResponse('Failed to send reset link. Please try again.', 500);
-        }
+        $frontendUrl = config('frontend.url', 'http://localhost:5173');
+        $resetUrl = $frontendUrl . '/reset-password?token=' . $token . '&email=' . urlencode($user->email);
+
+        app(EmailNotificationService::class)->sendPasswordReset($user, $resetUrl);
 
         return $this->successResponse(null, 'If an account with that email exists, a reset link has been sent.');
     }

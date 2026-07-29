@@ -52,7 +52,7 @@ interface SettingsState {
 
 const defaults: SettingsState = {
   platform_name: "Techub",
-  support_email: "support@techhub.com",
+  support_email: "support@techub.com",
   platform_description: "Techub is your all-in-one financial services platform.",
   default_currency: "NGN",
   maintenance_mode: false,
@@ -102,16 +102,13 @@ function AdminSettingsPage() {
   async function loadAllSettings() {
     setLoading(true);
     try {
-      for (const [group] of Object.entries(groups)) {
-        try {
-          const data = await adminSettings.getGroup(group);
-          if (data && typeof data === "object") {
-            setSettings((prev) => ({ ...prev, ...data }));
-          }
-        } catch {
-          // group may not exist yet, use defaults
-        }
-      }
+      const results = await Promise.all(
+        Object.keys(groups).map((group) =>
+          adminSettings.getGroup(group).catch(() => ({} as Record<string, unknown>)),
+        ),
+      );
+      const merged = Object.assign({}, ...results);
+      setSettings((prev) => ({ ...prev, ...merged }));
     } finally {
       setLoading(false);
     }

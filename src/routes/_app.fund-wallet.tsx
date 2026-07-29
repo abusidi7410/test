@@ -56,6 +56,7 @@ function FundWalletPage() {
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Something went wrong";
       toast.error(message);
+      console.error("Payment init failed:", err);
       setIsSubmitting(false);
     }
   }

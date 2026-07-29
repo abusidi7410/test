@@ -31,6 +31,9 @@ class PaystackService
         ?string $callbackUrl = null,
         ?array  $metadata = null,
     ): ?array {
+        $hasKey = !empty($this->secretKey);
+        $keyPrefix = $hasKey ? substr($this->secretKey, 0, 8) . '...' : 'MISSING';
+
         $payload = [
             'amount' => $amountInKobo,
             'email' => $email,
@@ -52,6 +55,8 @@ class PaystackService
                 'amount_kobo' => $amountInKobo,
                 'email' => $email,
                 'callback_url' => $callbackUrl,
+                'key_prefix' => $keyPrefix,
+                'base_url' => $this->baseUrl,
             ]);
 
             $response = Http::withHeaders([
@@ -64,9 +69,13 @@ class PaystackService
                 return $response->json('data');
             }
 
+            $responseBody = $response->json();
             Log::error('Paystack initialize transaction failed', [
                 'reference' => $reference,
-                'response' => $response->json(),
+                'http_status' => $response->status(),
+                'paystack_status' => $responseBody['status'] ?? 'unknown',
+                'paystack_message' => $responseBody['message'] ?? null,
+                'response_body' => $responseBody,
             ]);
 
             return null;
@@ -74,6 +83,7 @@ class PaystackService
             Log::error('Paystack initialize transaction exception', [
                 'reference' => $reference,
                 'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
             ]);
 
             return null;

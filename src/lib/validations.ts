@@ -89,12 +89,6 @@ export const educationSchema = z.object({
   provider: z.string().min(1, "Please select a provider"),
 });
 
-export const bettingSchema = z.object({
-  user_id: z.string().min(1, "User ID is required"),
-  amount: z.coerce.number().min(100, "Minimum amount is ₦100"),
-  provider: z.string().min(1, "Please select a provider"),
-});
-
 export const airtimeToCashSchema = z.object({
   phone: z.string().regex(nigerianPhoneRegex, "Please enter a valid Nigerian phone number"),
   amount: z.coerce.number().min(500, "Minimum conversion amount is ₦500"),
@@ -142,7 +136,7 @@ export type ElectricityInput = z.infer<typeof electricitySchema>;
 export type CableTvInput = z.infer<typeof cableTvSchema>;
 export type InternetInput = z.infer<typeof internetSchema>;
 export type EducationInput = z.infer<typeof educationSchema>;
-export type BettingInput = z.infer<typeof bettingSchema>;
+
 export type AirtimeToCashInput = z.infer<typeof airtimeToCashSchema>;
 export type ProfileInput = z.infer<typeof profileSchema>;
 export type PasswordChangeInput = z.infer<typeof passwordChangeSchema>;
